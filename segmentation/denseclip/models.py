@@ -421,11 +421,15 @@ class TransformerDecoderLayer(nn.Module):
         x = x + self.dropout(self.mlp(self.norm3(x)))
         return x
 
-
 @BACKBONES.register_module()
 class CLIPVisionTransformer(nn.Module):
-    def __init__(self, input_resolution=224, patch_size=32, width=768, layers=12, heads=12, output_dim=512, drop_path_rate=0.0, out_indices=[3, 5, 7, 11], pretrained=None, get_embeddings=False, **kwargs):
+    # TODO: Create CLIP Vision Transformer without the FPN
+
+    def __init__(self, input_resolution=224, patch_size=32, width=768, layers=12, heads=12, output_dim=512, 
+                 drop_path_rate=0.0, out_indices=[3, 5, 7, 11], pretrained=None, get_embeddings=False, 
+                 dense=True, csa=False, **kwargs):
         super().__init__()
+        self.dense = dense
         self.pretrained = pretrained
         self.input_resolution = input_resolution
         self.output_dim = output_dim
@@ -448,45 +452,50 @@ class CLIPVisionTransformer(nn.Module):
 
         embed_dim = width
 
-        if patch_size == 16:
-            self.fpn1 = nn.Sequential(
-                nn.GroupNorm(1, embed_dim),
-                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
-                nn.SyncBatchNorm(embed_dim),
-                nn.GELU(),
-                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
-            )
+        self.csa = csa
 
-            self.fpn2 = nn.Sequential(
-                nn.GroupNorm(1, embed_dim),
-                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
-            )
+        if self.dense:
+            if patch_size == 16:
+                self.fpn1 = nn.Sequential(
+                    nn.GroupNorm(1, embed_dim),
+                    nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+                    nn.SyncBatchNorm(embed_dim),
+                    nn.GELU(),
+                    nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+                )
 
-            self.fpn3 = nn.GroupNorm(1, embed_dim)
+                self.fpn2 = nn.Sequential(
+                    nn.GroupNorm(1, embed_dim),
+                    nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+                )
 
-            self.fpn4 = nn.Sequential(
-                nn.GroupNorm(1, embed_dim),
-                nn.MaxPool2d(kernel_size=2, stride=2)
-            )
+                self.fpn3 = nn.GroupNorm(1, embed_dim)
 
-        elif patch_size == 8:
-            self.fpn1 = nn.Sequential(
-                nn.GroupNorm(1, embed_dim),
-                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
-            )
+                self.fpn4 = nn.Sequential(
+                    nn.GroupNorm(1, embed_dim),
+                    nn.MaxPool2d(kernel_size=2, stride=2)
+                )
 
-            self.fpn2 = nn.GroupNorm(1, embed_dim)
+            elif patch_size == 8:
+                self.fpn1 = nn.Sequential(
+                    nn.GroupNorm(1, embed_dim),
+                    nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+                )
 
-            self.fpn3 = nn.Sequential(
-                nn.GroupNorm(1, embed_dim),
-                nn.MaxPool2d(kernel_size=2, stride=2),
-            )
+                self.fpn2 = nn.GroupNorm(1, embed_dim)
 
-            self.fpn4 = nn.Sequential(
-                nn.GroupNorm(1, embed_dim),
-                nn.MaxPool2d(kernel_size=4, stride=4),
-            )
+                self.fpn3 = nn.Sequential(
+                    nn.GroupNorm(1, embed_dim),
+                    nn.MaxPool2d(kernel_size=2, stride=2),
+                )
 
+                self.fpn4 = nn.Sequential(
+                    nn.GroupNorm(1, embed_dim),
+                    nn.MaxPool2d(kernel_size=4, stride=4),
+                )
+
+        if self.pretrained is not None:
+            self.init_weights(self.pretrained)
         
     def init_weights(self, pretrained=None):
         pretrained = pretrained or self.pretrained
@@ -511,7 +520,9 @@ class CLIPVisionTransformer(nn.Module):
                     assert self.positional_embedding.shape == state_dict['positional_embedding'].shape
 
             u, w = self.load_state_dict(state_dict, False)
-            print(u, w, 'are misaligned params in vision transformer')
+            if len(u) or len(w):
+                print(u, w, 'are misaligned params in vision transformer')
+            print("Loaded visual encoder")
 
     def forward(self, x: torch.Tensor):
         x = self.conv1(x)  # shape = [*, width, grid, grid]
@@ -532,16 +543,27 @@ class CLIPVisionTransformer(nn.Module):
 
         features = []
         for i, blk in enumerate(self.transformer.resblocks):
-            x = blk(x)
+            if i < len(self.transformer.resblocks)-1:
+                x = blk(x)
+            else: 
+                x = x + self.custom_attn(blk.attn, blk.ln_1(x), csa=self.csa)
+                x = x + blk.mlp(blk.ln_2(x))
+
             if i in self.out_indices:
                 xp = x.permute(1, 0, 2)[:, 1:, :].permute(0, 2, 1).reshape(B, -1, H, W)
                 features.append(xp.contiguous())
 
-        ops = [self.fpn1, self.fpn2, self.fpn3, self.fpn4]
-        for i in range(len(features)):
-            features[i] = ops[i](features[i])
+
+        if self.dense:
+            # TODO: Not needed, you may leave it here for now
+            ops = [self.fpn1, self.fpn2, self.fpn3, self.fpn4]
+            for i in range(len(features)):
+                features[i] = ops[i](features[i])
         
         if self.get_embeddings:
+            # Get embeddings is true by default so this run everytime
+            # It will apply a batch norm layer and a projection matrix which will
+            # bring the embeddings into the shared milti-modal 
             x = x.permute(1, 0, 2)
             x = self.ln_post(x)
             x = x @ self.proj
@@ -552,6 +574,42 @@ class CLIPVisionTransformer(nn.Module):
             features.append([global_embedding, visual_embedding])
 
         return tuple(features)
+    
+    
+    def custom_attn(self, attn_layer, x, csa=False):
+        '''
+            Correlative self attention from the SCLIP Paper
+        '''
+        num_heads = attn_layer.num_heads
+        _, bsz, embed_dim = x.size()
+        head_dim = embed_dim // num_heads
+        scale = head_dim ** -0.5
+
+        q, k, v = F.linear(x, attn_layer.in_proj_weight, attn_layer.in_proj_bias).chunk(3, dim=-1)
+        q = q.contiguous().view(-1, bsz * num_heads, head_dim).transpose(0, 1)
+        k = k.contiguous().view(-1, bsz * num_heads, head_dim).transpose(0, 1)
+        v = v.contiguous().view(-1, bsz * num_heads, head_dim).transpose(0, 1)
+
+        if csa:
+            # This is the change they make for clip
+            q_attn = torch.bmm(q, q.transpose(1, 2)) * scale
+            k_attn = torch.bmm(k, k.transpose(1, 2)) * scale
+            attn_weights = F.softmax(q_attn, dim=-1) + F.softmax(k_attn, dim=-1)
+        else:
+            # Original Attnetion mechanism
+            attn_weights = torch.bmm(q * scale, k.transpose(1, 2))
+            attn_weights = F.softmax(attn_weights, dim=-1)
+
+        # This is the change they make for clip
+        q_attn = torch.bmm(q, q.transpose(1, 2)) * scale
+        k_attn = torch.bmm(k, k.transpose(1, 2)) * scale
+        attn_weights = F.softmax(q_attn, dim=-1) + F.softmax(k_attn, dim=-1)
+
+        attn_output = torch.bmm(attn_weights, v)
+        attn_output = attn_output.transpose(0, 1).contiguous().view(-1, bsz, embed_dim)
+        attn_output = attn_layer.out_proj(attn_output)
+
+        return attn_output
 
 @BACKBONES.register_module()
 class CLIPTextEncoder(nn.Module):
@@ -582,6 +640,9 @@ class CLIPTextEncoder(nn.Module):
         self.ln_final = LayerNorm(transformer_width)
         self.text_projection = nn.Parameter(torch.empty(transformer_width, embed_dim))
 
+        if self.pretrained is not None:
+            self.init_weights(self.pretrained)
+
     def init_weights(self, pretrained=None):
         pretrained = pretrained or self.pretrained
         if isinstance(pretrained, str):
@@ -598,9 +659,12 @@ class CLIPTextEncoder(nn.Module):
                         checkpoint[k] = checkpoint[k][:self.context_length]
                         print('positional_embedding is tuncated from 77 to', self.context_length)
                     state_dict[k] = checkpoint[k]
-             
+
             u, w = self.load_state_dict(state_dict, False)
-            print(u, w, 'are misaligned params in text encoder')
+            if len(u) or len(w):
+                print(u, w, 'are misaligned params in text encoder')
+
+            print("Loaded text encoder")
 
 
     def build_attention_mask(self):
@@ -655,6 +719,8 @@ class CLIPTextContextEncoder(nn.Module):
         self.text_projection = nn.Parameter(torch.empty(transformer_width, embed_dim))
 
     def init_weights(self, pretrained=None):
+        breakpoint()
+        
         pretrained = pretrained or self.pretrained
         if isinstance(pretrained, str):
             checkpoint = torch.jit.load(pretrained, map_location='cpu').float().state_dict()

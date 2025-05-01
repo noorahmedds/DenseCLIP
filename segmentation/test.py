@@ -12,11 +12,13 @@ from mmseg.models import build_segmentor
 
 import denseclip
 
+from custom_datasets import PartImageNet
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description='mmseg test (and eval) a model')
     parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument('--checkpoint', default=None, help='If no checkpoint file is given use default clip weights')
     parser.add_argument(
         '--aug-test', action='store_true', help='Use Flip and Multi scale aug')
     parser.add_argument('--out', help='output result file in pickle format')
@@ -120,9 +122,11 @@ def main():
         cfg.model.class_names = list(dataset.CLASSES)
 
     model = build_segmentor(cfg.model, test_cfg=cfg.get('test_cfg'))
-    checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
-    model.CLASSES = checkpoint['meta']['CLASSES']
-    model.PALETTE = checkpoint['meta']['PALETTE']
+    
+    if args.checkpoint is not None:
+        checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
+        model.CLASSES = checkpoint['meta']['CLASSES']
+        model.PALETTE = checkpoint['meta']['PALETTE']
 
 
     # clean gpu memory when starting a new evaluation.
@@ -159,3 +163,25 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
+'''
+    For SimpleDenseClip evaluation with pretrained CLIP Weights: 
+        python test.py ./configs/simpledenseclip.py --eval mIoU
+    
+    For SimpleDenseClip evaluation with finetuned CLIP Weights on PartImageNet (pin):
+        python test.py ./configs/simpledenseclip.py --checkpoint "./pretrained/simpledenseclip_pin.pth" --eval mIoU 
+        Note: First the clip original weights will be loaded onto the model and then the pretrained weights will be loaded. A workarund to this would be saving the ViT-B-16.pt (the original clip weights) in the mmseg compatible format
+        
+    ------
+    
+    For SimpleDenseClip evaluation with pretrain CLIP Weights on PartImageNetBicycle:
+        python test.py ./configs/simpledenseclip_bicycle.py --eval mIoU 
+        
+    For SimpleDenseClip evaluation with finetuned CLIP Weights on PartImageNetBicycle:
+        python test.py ./configs/simpledenseclip_bicycle.py --eval mIoU --checkpoint "./results/ft_sdc_pin_bicycle/iter_1000.pth"
+        python test.py ./configs/simpledenseclip.py --eval mIoU --checkpoint "./results/ft_sdc_pin_bicycle/iter_1000.pth"
+
+
+'''

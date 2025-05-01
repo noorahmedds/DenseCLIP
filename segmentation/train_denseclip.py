@@ -12,8 +12,10 @@ from mmseg.apis import set_random_seed, train_segmentor
 from mmseg.datasets import build_dataset
 from mmseg.models import build_segmentor
 from mmseg.utils import collect_env, get_root_logger
-import denseclip
 
+# For registring segmentor and custom datasets
+import denseclip
+import custom_datasets
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
@@ -129,7 +131,6 @@ def main():
 
     datasets = [build_dataset(cfg.data.train)]
 
-
     if 'DenseCLIP' in cfg.model.type:
         cfg.model.class_names = list(datasets[0].CLASSES)
 
@@ -179,3 +180,16 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+'''
+    PartImageNet finetuning for SimpleDenseClip:
+        python train_denseclip.py ./configs/simpledenseclip.py --work-dir ./results/ft_sdc_pin --gpus 1 --seed 11
+
+    PartImageNetBicycle finetuning for SimpleDenseClip:
+        python train_denseclip.py ./configs/simpledenseclip_bicycle.py --work-dir ./results/ft_sdc_pin_bicycle --gpus 1 --seed 11
+        
+    PartImageNet (Complete) finetuning for SimpleDenseClip:
+        python train_denseclip.py ./configs/simpledenseclip.py --work-dir ./results/ft_sdc_pin --gpus 1 --seed 11
+
+'''
+

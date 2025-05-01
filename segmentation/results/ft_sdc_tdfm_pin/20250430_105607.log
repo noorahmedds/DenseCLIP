@@ -1,0 +1,226 @@
+2025-04-30 10:56:07,265 - mmseg - INFO - Environment info:
+------------------------------------------------------------
+sys.platform: linux
+Python: 3.8.20 (default, Oct  3 2024, 15:24:27) [GCC 11.2.0]
+CUDA available: True
+GPU 0: NVIDIA RTX A6000
+CUDA_HOME: /usr/local/cuda-11.7
+NVCC: Build cuda_11.7.r11.7/compiler.31442593_0
+GCC: gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
+PyTorch: 1.8.0
+PyTorch compiling details: PyTorch built with:
+  - GCC 7.3
+  - C++ Version: 201402
+  - Intel(R) oneAPI Math Kernel Library Version 2023.1-Product Build 20230303 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v1.7.0 (Git Hash 7aed236906b1f7a05c0917e5257a1af05e9ff683)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.1
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_61,code=sm_61;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_37,code=compute_37
+  - CuDNN 8.0.5
+  - Magma 2.5.2
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.1, CUDNN_VERSION=8.0.5, CXX_COMPILER=/opt/rh/devtoolset-7/root/usr/bin/c++, CXX_FLAGS= -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -fopenmp -DNDEBUG -DUSE_KINETO -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.8.0, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, 
+
+TorchVision: 0.9.0
+OpenCV: 4.11.0
+MMCV: 1.3.17
+MMCV Compiler: GCC 7.3
+MMCV CUDA Compiler: 11.1
+MMSegmentation: 0.19.0+5eda47f
+------------------------------------------------------------
+
+2025-04-30 10:56:07,265 - mmseg - INFO - Distributed training: False
+2025-04-30 10:56:07,423 - mmseg - INFO - Config:
+dataset_type = 'TDFM_PIN'
+data_root = '/home/noah00001/Desktop/dataset/TDFM_PIN'
+IMG_MEAN = [122.7709383, 116.7460125, 104.09373615000001]
+IMG_VAR = [68.5005327, 66.6321579, 70.32316304999999]
+img_norm_cfg = dict(
+    mean=[122.7709383, 116.7460125, 104.09373615000001],
+    std=[68.5005327, 66.6321579, 70.32316304999999],
+    to_rgb=True)
+crop_size = (640, 640)
+identity_head = ({
+    'type': 'IdentityHead',
+    'in_channels': 1,
+    'channels': 1,
+    'num_classes': 1,
+    'dropout_ratio': 0.1,
+    'align_corners': False,
+    'ignore_index': 255,
+    'loss_decode': {
+        'type': 'CrossEntropyLoss',
+        'use_sigmoid': False,
+        'loss_weight': 0.4
+    }
+}, )
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations'),
+    dict(type='Resize', img_scale=(2048, 640), ratio_range=(0.5, 2.0)),
+    dict(type='RandomCrop', crop_size=(640, 640), cat_max_ratio=0.75),
+    dict(type='RandomFlip', prob=0.5),
+    dict(type='PhotoMetricDistortion'),
+    dict(
+        type='Normalize',
+        mean=[122.7709383, 116.7460125, 104.09373615000001],
+        std=[68.5005327, 66.6321579, 70.32316304999999],
+        to_rgb=True),
+    dict(type='Pad', size=(640, 640), pad_val=0, seg_pad_val=255),
+    dict(type='DefaultFormatBundle'),
+    dict(type='Collect', keys=['img', 'gt_semantic_seg'])
+]
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(2048, 640),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(
+                type='Normalize',
+                mean=[122.7709383, 116.7460125, 104.09373615000001],
+                std=[68.5005327, 66.6321579, 70.32316304999999],
+                to_rgb=True),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ])
+]
+data = dict(
+    samples_per_gpu=4,
+    workers_per_gpu=4,
+    train=dict(
+        type='TDFM_PIN',
+        data_root='/home/noah00001/Desktop/dataset/TDFM_PIN',
+        img_dir='images/train',
+        ann_dir='annotations/train',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadAnnotations'),
+            dict(type='Resize', img_scale=(2048, 640), ratio_range=(0.5, 2.0)),
+            dict(type='RandomCrop', crop_size=(640, 640), cat_max_ratio=0.75),
+            dict(type='RandomFlip', prob=0.5),
+            dict(type='PhotoMetricDistortion'),
+            dict(
+                type='Normalize',
+                mean=[122.7709383, 116.7460125, 104.09373615000001],
+                std=[68.5005327, 66.6321579, 70.32316304999999],
+                to_rgb=True),
+            dict(type='Pad', size=(640, 640), pad_val=0, seg_pad_val=255),
+            dict(type='DefaultFormatBundle'),
+            dict(type='Collect', keys=['img', 'gt_semantic_seg'])
+        ]),
+    val=dict(
+        type='TDFM_PIN',
+        data_root='/home/noah00001/Desktop/dataset/TDFM_PIN',
+        img_dir='images/val',
+        ann_dir='annotations/val',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(2048, 640),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[122.7709383, 116.7460125, 104.09373615000001],
+                        std=[68.5005327, 66.6321579, 70.32316304999999],
+                        to_rgb=True),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]),
+    test=dict(
+        type='TDFM_PIN',
+        data_root='/home/noah00001/Desktop/dataset/TDFM_PIN',
+        img_dir='images/val',
+        ann_dir='annotations/val',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(2048, 640),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[122.7709383, 116.7460125, 104.09373615000001],
+                        std=[68.5005327, 66.6321579, 70.32316304999999],
+                        to_rgb=True),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]))
+log_config = dict(
+    interval=50, hooks=[dict(type='TextLoggerHook', by_epoch=False)])
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+load_from = None
+resume_from = None
+workflow = [('train', 100), ('val', 2)]
+cudnn_benchmark = True
+find_unused_parameters = True
+optimizer = dict(
+    type='AdamW',
+    lr=0.0001,
+    weight_decay=0.0001,
+    paramwise_cfg=dict(
+        custom_keys=dict(
+            backbone=dict(lr_mult=0.1),
+            text_encoder=dict(lr_mult=0.0),
+            norm=dict(decay_mult=0.0))))
+optimizer_config = dict()
+lr_config = dict(
+    policy='poly',
+    power=0.9,
+    min_lr=1e-06,
+    by_epoch=False,
+    warmup='linear',
+    warmup_iters=1500,
+    warmup_ratio=1e-06)
+runner = dict(type='IterBasedRunner', max_iters=20000)
+checkpoint_config = dict(by_epoch=False, interval=2000)
+evaluation = dict(interval=2000, metric='mIoU')
+norm_cfg = dict(type='SyncBN', requires_grad=True)
+model = dict(
+    type='SimpleDenseCLIP',
+    context_length=77,
+    text_head=False,
+    text_dim=512,
+    score_concat_index=2,
+    backbone=dict(
+        type='CLIPVisionTransformer',
+        pretrained='pretrained/ViT-B-16.pt',
+        patch_size=16,
+        width=768,
+        output_dim=512,
+        get_embeddings=True,
+        drop_path_rate=0.1,
+        layers=12,
+        input_resolution=640,
+        dense=False,
+        style='pytorch'),
+    text_encoder=dict(
+        type='CLIPTextEncoder',
+        pretrained='pretrained/ViT-B-16.pt',
+        context_length=77,
+        embed_dim=512,
+        transformer_width=512,
+        transformer_heads=8,
+        transformer_layers=12,
+        style='pytorch'),
+    train_cfg=dict(),
+    test_cfg=dict(mode='whole'))
+work_dir = './results/ft_sdc_tdfm_pin'
+gpu_ids = range(0, 1)
+
+2025-04-30 10:56:07,423 - mmseg - INFO - Set random seed to 11, deterministic: False
+2025-04-30 10:56:07,561 - mmseg - INFO - Loaded 20466 images

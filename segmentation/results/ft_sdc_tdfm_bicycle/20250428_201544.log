@@ -1,0 +1,835 @@
+2025-04-28 20:15:44,481 - mmseg - INFO - Environment info:
+------------------------------------------------------------
+sys.platform: linux
+Python: 3.8.20 (default, Oct  3 2024, 15:24:27) [GCC 11.2.0]
+CUDA available: True
+GPU 0: NVIDIA RTX A6000
+CUDA_HOME: /usr/local/cuda-11.7
+NVCC: Build cuda_11.7.r11.7/compiler.31442593_0
+GCC: gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
+PyTorch: 1.8.0
+PyTorch compiling details: PyTorch built with:
+  - GCC 7.3
+  - C++ Version: 201402
+  - Intel(R) oneAPI Math Kernel Library Version 2023.1-Product Build 20230303 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v1.7.0 (Git Hash 7aed236906b1f7a05c0917e5257a1af05e9ff683)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.1
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_61,code=sm_61;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_37,code=compute_37
+  - CuDNN 8.0.5
+  - Magma 2.5.2
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.1, CUDNN_VERSION=8.0.5, CXX_COMPILER=/opt/rh/devtoolset-7/root/usr/bin/c++, CXX_FLAGS= -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -fopenmp -DNDEBUG -DUSE_KINETO -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.8.0, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, 
+
+TorchVision: 0.9.0
+OpenCV: 4.11.0
+MMCV: 1.3.17
+MMCV Compiler: GCC 7.3
+MMCV CUDA Compiler: 11.1
+MMSegmentation: 0.19.0+5eda47f
+------------------------------------------------------------
+
+2025-04-28 20:15:44,481 - mmseg - INFO - Distributed training: False
+2025-04-28 20:15:44,592 - mmseg - INFO - Config:
+dataset_type = 'TDFMBicycle'
+data_root = '/home/noah00001/Desktop/dataset/TDFMBicycle'
+IMG_MEAN = [122.7709383, 116.7460125, 104.09373615000001]
+IMG_VAR = [68.5005327, 66.6321579, 70.32316304999999]
+img_norm_cfg = dict(
+    mean=[122.7709383, 116.7460125, 104.09373615000001],
+    std=[68.5005327, 66.6321579, 70.32316304999999],
+    to_rgb=True)
+crop_size = (640, 640)
+model = dict(
+    identity_head=dict(
+        type='IdentityHead',
+        in_channels=1,
+        channels=1,
+        num_classes=1,
+        dropout_ratio=0.1,
+        align_corners=False,
+        loss_decode=dict(
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4)),
+    type='SimpleDenseCLIP',
+    context_length=77,
+    text_head=False,
+    text_dim=512,
+    score_concat_index=2,
+    backbone=dict(
+        type='CLIPVisionTransformer',
+        pretrained='pretrained/ViT-B-16.pt',
+        patch_size=16,
+        width=768,
+        output_dim=512,
+        get_embeddings=True,
+        drop_path_rate=0.1,
+        layers=12,
+        input_resolution=640,
+        dense=False,
+        style='pytorch'),
+    text_encoder=dict(
+        type='CLIPTextEncoder',
+        pretrained='pretrained/ViT-B-16.pt',
+        context_length=77,
+        embed_dim=512,
+        transformer_width=512,
+        transformer_heads=8,
+        transformer_layers=12,
+        style='pytorch'),
+    train_cfg=dict(),
+    test_cfg=dict(mode='whole'))
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations'),
+    dict(type='Resize', img_scale=(2048, 640), ratio_range=(0.5, 2.0)),
+    dict(type='RandomCrop', crop_size=(640, 640), cat_max_ratio=0.75),
+    dict(type='RandomFlip', prob=0.5),
+    dict(type='PhotoMetricDistortion'),
+    dict(
+        type='Normalize',
+        mean=[122.7709383, 116.7460125, 104.09373615000001],
+        std=[68.5005327, 66.6321579, 70.32316304999999],
+        to_rgb=True),
+    dict(type='Pad', size=(640, 640), pad_val=0, seg_pad_val=255),
+    dict(type='DefaultFormatBundle'),
+    dict(type='Collect', keys=['img', 'gt_semantic_seg'])
+]
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(2048, 640),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(
+                type='Normalize',
+                mean=[122.7709383, 116.7460125, 104.09373615000001],
+                std=[68.5005327, 66.6321579, 70.32316304999999],
+                to_rgb=True),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ])
+]
+data = dict(
+    samples_per_gpu=4,
+    workers_per_gpu=4,
+    train=dict(
+        type='TDFMBicycle',
+        data_root='/home/noah00001/Desktop/dataset/TDFMBicycle',
+        img_dir='images/train',
+        ann_dir='annotations/train',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadAnnotations'),
+            dict(type='Resize', img_scale=(2048, 640), ratio_range=(0.5, 2.0)),
+            dict(type='RandomCrop', crop_size=(640, 640), cat_max_ratio=0.75),
+            dict(type='RandomFlip', prob=0.5),
+            dict(type='PhotoMetricDistortion'),
+            dict(
+                type='Normalize',
+                mean=[122.7709383, 116.7460125, 104.09373615000001],
+                std=[68.5005327, 66.6321579, 70.32316304999999],
+                to_rgb=True),
+            dict(type='Pad', size=(640, 640), pad_val=0, seg_pad_val=255),
+            dict(type='DefaultFormatBundle'),
+            dict(type='Collect', keys=['img', 'gt_semantic_seg'])
+        ]),
+    val=dict(
+        type='TDFMBicycle',
+        data_root='/home/noah00001/Desktop/dataset/TDFMBicycle',
+        img_dir='images/val',
+        ann_dir='annotations/val',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(2048, 640),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[122.7709383, 116.7460125, 104.09373615000001],
+                        std=[68.5005327, 66.6321579, 70.32316304999999],
+                        to_rgb=True),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]),
+    test=dict(
+        type='TDFMBicycle',
+        data_root='/home/noah00001/Desktop/dataset/TDFMBicycle',
+        img_dir='images/val',
+        ann_dir='annotations/val',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(2048, 640),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[122.7709383, 116.7460125, 104.09373615000001],
+                        std=[68.5005327, 66.6321579, 70.32316304999999],
+                        to_rgb=True),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]))
+log_config = dict(
+    interval=50, hooks=[dict(type='TextLoggerHook', by_epoch=False)])
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+load_from = None
+resume_from = None
+workflow = [('train', 100), ('val', 2)]
+cudnn_benchmark = True
+find_unused_parameters = True
+optimizer = dict(
+    type='AdamW',
+    lr=0.0001,
+    weight_decay=0.0001,
+    paramwise_cfg=dict(
+        custom_keys=dict(
+            backbone=dict(lr_mult=0.1),
+            text_encoder=dict(lr_mult=0.0),
+            norm=dict(decay_mult=0.0))))
+optimizer_config = dict()
+lr_config = dict(
+    policy='poly',
+    power=0.9,
+    min_lr=1e-06,
+    by_epoch=False,
+    warmup='linear',
+    warmup_iters=1500,
+    warmup_ratio=1e-06)
+runner = dict(type='IterBasedRunner', max_iters=1000)
+checkpoint_config = dict(by_epoch=False, interval=500)
+evaluation = dict(interval=100, metric='mIoU')
+norm_cfg = dict(type='SyncBN', requires_grad=True)
+work_dir = './results/ft_sdc_tdfm_bicycle'
+gpu_ids = range(0, 1)
+
+2025-04-28 20:15:44,592 - mmseg - INFO - Set random seed to 11, deterministic: False
+2025-04-28 20:15:44,597 - mmseg - INFO - Loaded 540 images
+2025-04-28 20:15:46,010 - mmseg - INFO - #Params: 150699008
+2025-04-28 20:15:46,647 - mmseg - INFO - SimpleDenseCLIP(
+  (backbone): CLIPVisionTransformer(
+    (conv1): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16), bias=False)
+    (ln_pre): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    (transformer): Transformer(
+      (resblocks): Sequential(
+        (0): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (1): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.00909090880304575)
+        )
+        (2): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.0181818176060915)
+        )
+        (3): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.027272727340459824)
+        )
+        (4): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.036363635212183)
+        )
+        (5): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.045454543083906174)
+        )
+        (6): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.054545458406209946)
+        )
+        (7): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.06363636255264282)
+        )
+        (8): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.0727272778749466)
+        )
+        (9): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.08181818574666977)
+        )
+        (10): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.09090909361839294)
+        )
+        (11): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.10000000149011612)
+        )
+      )
+    )
+    (ln_post): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+  )
+  (text_encoder): CLIPTextEncoder(
+    (transformer): Transformer(
+      (resblocks): Sequential(
+        (0): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (1): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (2): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (3): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (4): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (5): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (6): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (7): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (8): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (9): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (10): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (11): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+      )
+    )
+    (token_embedding): Embedding(49408, 512)
+    (ln_final): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+  )
+  (identity_head): IdentityHead(
+    input_transform=None, ignore_index=255, align_corners=False
+    (loss_decode): CrossEntropyLoss()
+    (conv_seg): None
+    (dropout): Dropout2d(p=0.1, inplace=False)
+  )
+  init_cfg={'type': 'Normal', 'std': 0.01, 'override': {'name': 'conv_seg'}}
+)
+2025-04-28 20:15:46,653 - mmseg - INFO - Loaded 540 images
+2025-04-28 20:15:48,556 - mmseg - INFO - Loaded 540 images
+2025-04-28 20:15:48,556 - mmseg - INFO - Start running, host: noah00001@buzz, work_dir: /home/noah00001/Desktop/projects/throwaway/DenseCLIP/segmentation/results/ft_sdc_tdfm_bicycle
+2025-04-28 20:15:48,556 - mmseg - INFO - Hooks will be executed in the following order:
+before_run:
+(VERY_HIGH   ) PolyLrUpdaterHook                  
+(NORMAL      ) CheckpointHook                     
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_train_epoch:
+(VERY_HIGH   ) PolyLrUpdaterHook                  
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_train_iter:
+(VERY_HIGH   ) PolyLrUpdaterHook                  
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+ -------------------- 
+after_train_iter:
+(ABOVE_NORMAL) OptimizerHook                      
+(NORMAL      ) CheckpointHook                     
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+after_train_epoch:
+(NORMAL      ) CheckpointHook                     
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_val_epoch:
+(LOW         ) IterTimerHook                      
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_val_iter:
+(LOW         ) IterTimerHook                      
+ -------------------- 
+after_val_iter:
+(LOW         ) IterTimerHook                      
+ -------------------- 
+after_val_epoch:
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+after_run:
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+2025-04-28 20:15:48,557 - mmseg - INFO - workflow: [('train', 100), ('val', 2)], max: 1000 iters
+2025-04-28 20:15:48,557 - mmseg - INFO - Checkpoints will be saved to /home/noah00001/Desktop/projects/throwaway/DenseCLIP/segmentation/results/ft_sdc_tdfm_bicycle by HardDiskBackend.
+2025-04-28 20:16:14,669 - mmseg - INFO - Iter [50/1000]	lr: 3.137e-07, eta: 0:08:09, time: 0.515, data_time: 0.006, memory: 19318, aux_identity.loss_ce: 0.0569, aux_identity.acc_seg: 1.2558, loss: 0.0569
+2025-04-28 20:16:39,240 - mmseg - INFO - Iter [100/1000]	lr: 6.068e-07, eta: 0:07:33, time: 0.491, data_time: 0.006, memory: 19318, aux_identity.loss_ce: 0.0497, aux_identity.acc_seg: 4.9995, loss: 0.0497
+2025-04-28 20:16:57,715 - mmseg - INFO - per class results:
+2025-04-28 20:16:57,716 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|   Bicyle Frame   |  0.0  |  0.0  |
+|   Bicyle Wheel   | 69.17 | 100.0 |
+| Bicyle Handlebar |  0.0  |  0.0  |
+|   Bicycle Seat   |  0.0  |  0.0  |
+|  Bicycle Pedal   |  0.0  |  0.0  |
+|  Bicycle Chain   |  0.0  |  0.0  |
++------------------+-------+-------+
+2025-04-28 20:16:57,716 - mmseg - INFO - Summary:
+2025-04-28 20:16:57,716 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 69.17 | 11.53 | 16.67 |
++-------+-------+-------+
+2025-04-28 20:16:57,717 - mmseg - INFO - Iter(val) [540]	aAcc: 0.6917, mIoU: 0.1153, mAcc: 0.1667, IoU.Bicyle Frame: 0.0000, IoU.Bicyle Wheel: 0.6917, IoU.Bicyle Handlebar: 0.0000, IoU.Bicycle Seat: 0.0000, IoU.Bicycle Pedal: 0.0000, IoU.Bicycle Chain: 0.0000, Acc.Bicyle Frame: 0.0000, Acc.Bicyle Wheel: 1.0000, Acc.Bicyle Handlebar: 0.0000, Acc.Bicycle Seat: 0.0000, Acc.Bicycle Pedal: 0.0000, Acc.Bicycle Chain: 0.0000
+2025-04-28 20:17:24,679 - mmseg - INFO - Iter [150/1000]	lr: 8.725e-07, eta: 0:07:16, time: 0.535, data_time: 0.047, memory: 19318, aux_identity.loss_ce_val: 0.0389, aux_identity.acc_seg_val: 5.4852, loss_val: 0.0389, aux_identity.loss_ce: 0.0390, aux_identity.acc_seg: 5.4725, loss: 0.0390
+2025-04-28 20:17:49,169 - mmseg - INFO - Iter [200/1000]	lr: 1.111e-06, eta: 0:06:46, time: 0.490, data_time: 0.006, memory: 19318, aux_identity.loss_ce_val: 0.0389, aux_identity.acc_seg_val: 5.4852, loss_val: 0.0389, aux_identity.loss_ce: 0.0332, aux_identity.acc_seg: 5.8509, loss: 0.0332
+2025-04-28 20:18:05,557 - mmseg - INFO - per class results:
+2025-04-28 20:18:05,557 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|   Bicyle Frame   | 39.88 | 72.78 |
+|   Bicyle Wheel   | 88.27 | 99.17 |
+| Bicyle Handlebar |  0.0  |  0.0  |
+|   Bicycle Seat   |  2.67 |  2.77 |
+|  Bicycle Pedal   |  0.0  |  0.0  |
+|  Bicycle Chain   |  0.0  |  0.0  |
++------------------+-------+-------+
+2025-04-28 20:18:05,557 - mmseg - INFO - Summary:
+2025-04-28 20:18:05,557 - mmseg - INFO - 
++-------+------+-------+
+|  aAcc | mIoU |  mAcc |
++-------+------+-------+
+| 79.29 | 21.8 | 29.12 |
++-------+------+-------+
+2025-04-28 20:18:05,558 - mmseg - INFO - Iter(val) [540]	aAcc: 0.7929, mIoU: 0.2180, mAcc: 0.2912, IoU.Bicyle Frame: 0.3988, IoU.Bicyle Wheel: 0.8827, IoU.Bicyle Handlebar: 0.0000, IoU.Bicycle Seat: 0.0267, IoU.Bicycle Pedal: 0.0000, IoU.Bicycle Chain: 0.0000, Acc.Bicyle Frame: 0.7278, Acc.Bicyle Wheel: 0.9917, Acc.Bicyle Handlebar: 0.0000, Acc.Bicycle Seat: 0.0277, Acc.Bicycle Pedal: 0.0000, Acc.Bicycle Chain: 0.0000
+2025-04-28 20:18:30,421 - mmseg - INFO - Iter [250/1000]	lr: 1.321e-06, eta: 0:06:18, time: 0.493, data_time: 0.006, memory: 19318, aux_identity.loss_ce_val: 0.0299, aux_identity.acc_seg_val: 8.1314, loss_val: 0.0299, aux_identity.loss_ce: 0.0236, aux_identity.acc_seg: 6.8765, loss: 0.0236
+2025-04-28 20:18:57,087 - mmseg - INFO - Iter [300/1000]	lr: 1.502e-06, eta: 0:05:56, time: 0.533, data_time: 0.048, memory: 19318, aux_identity.loss_ce_val: 0.0299, aux_identity.acc_seg_val: 8.1314, loss_val: 0.0299, aux_identity.loss_ce: 0.0191, aux_identity.acc_seg: 6.8023, loss: 0.0191
+2025-04-28 20:19:14,157 - mmseg - INFO - per class results:
+2025-04-28 20:19:14,157 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|   Bicyle Frame   |  52.8 | 80.94 |
+|   Bicyle Wheel   | 94.86 | 97.66 |
+| Bicyle Handlebar |  0.29 |  0.29 |
+|   Bicycle Seat   | 56.04 | 88.08 |
+|  Bicycle Pedal   |  0.0  |  0.0  |
+|  Bicycle Chain   |  0.0  |  0.0  |
++------------------+-------+-------+
+2025-04-28 20:19:14,157 - mmseg - INFO - Summary:
+2025-04-28 20:19:14,158 - mmseg - INFO - 
++-------+------+-------+
+|  aAcc | mIoU |  mAcc |
++-------+------+-------+
+| 85.93 | 34.0 | 44.49 |
++-------+------+-------+
+2025-04-28 20:19:14,158 - mmseg - INFO - Iter(val) [540]	aAcc: 0.8593, mIoU: 0.3400, mAcc: 0.4449, IoU.Bicyle Frame: 0.5280, IoU.Bicyle Wheel: 0.9486, IoU.Bicyle Handlebar: 0.0029, IoU.Bicycle Seat: 0.5604, IoU.Bicycle Pedal: 0.0000, IoU.Bicycle Chain: 0.0000, Acc.Bicyle Frame: 0.8094, Acc.Bicyle Wheel: 0.9766, Acc.Bicyle Handlebar: 0.0029, Acc.Bicycle Seat: 0.8808, Acc.Bicycle Pedal: 0.0000, Acc.Bicycle Chain: 0.0000
+2025-04-28 20:19:38,955 - mmseg - INFO - Iter [350/1000]	lr: 1.656e-06, eta: 0:05:29, time: 0.491, data_time: 0.006, memory: 19318, aux_identity.loss_ce_val: 0.0172, aux_identity.acc_seg_val: 8.2648, loss_val: 0.0172, aux_identity.loss_ce: 0.0179, aux_identity.acc_seg: 7.6145, loss: 0.0179
+2025-04-28 20:20:03,468 - mmseg - INFO - Iter [400/1000]	lr: 1.780e-06, eta: 0:05:02, time: 0.490, data_time: 0.006, memory: 19318, aux_identity.loss_ce_val: 0.0172, aux_identity.acc_seg_val: 8.2648, loss_val: 0.0172, aux_identity.loss_ce: 0.0138, aux_identity.acc_seg: 7.0953, loss: 0.0138
+2025-04-28 20:20:19,925 - mmseg - INFO - per class results:
+2025-04-28 20:20:19,925 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|   Bicyle Frame   | 61.78 | 82.23 |
+|   Bicyle Wheel   | 95.93 | 98.11 |
+| Bicyle Handlebar | 62.38 | 67.32 |
+|   Bicycle Seat   | 69.78 | 92.89 |
+|  Bicycle Pedal   |  7.09 |  7.25 |
+|  Bicycle Chain   | 36.06 |  39.8 |
++------------------+-------+-------+
+2025-04-28 20:20:19,925 - mmseg - INFO - Summary:
+2025-04-28 20:20:19,925 - mmseg - INFO - 
++-------+------+------+
+|  aAcc | mIoU | mAcc |
++-------+------+------+
+| 90.54 | 55.5 | 64.6 |
++-------+------+------+
+2025-04-28 20:20:19,926 - mmseg - INFO - Iter(val) [540]	aAcc: 0.9054, mIoU: 0.5550, mAcc: 0.6460, IoU.Bicyle Frame: 0.6178, IoU.Bicyle Wheel: 0.9593, IoU.Bicyle Handlebar: 0.6238, IoU.Bicycle Seat: 0.6978, IoU.Bicycle Pedal: 0.0709, IoU.Bicycle Chain: 0.3606, Acc.Bicyle Frame: 0.8223, Acc.Bicyle Wheel: 0.9811, Acc.Bicyle Handlebar: 0.6732, Acc.Bicycle Seat: 0.9289, Acc.Bicycle Pedal: 0.0725, Acc.Bicycle Chain: 0.3980
+2025-04-28 20:20:47,421 - mmseg - INFO - Iter [450/1000]	lr: 1.875e-06, eta: 0:04:40, time: 0.545, data_time: 0.048, memory: 19318, aux_identity.loss_ce_val: 0.0125, aux_identity.acc_seg_val: 9.0654, loss_val: 0.0125, aux_identity.loss_ce: 0.0119, aux_identity.acc_seg: 7.2546, loss: 0.0119
+2025-04-28 20:21:12,414 - mmseg - INFO - Saving checkpoint at 500 iterations
+2025-04-28 20:21:15,557 - mmseg - INFO - Iter [500/1000]	lr: 1.940e-06, eta: 0:04:17, time: 0.563, data_time: 0.006, memory: 19318, aux_identity.loss_ce_val: 0.0125, aux_identity.acc_seg_val: 9.0654, loss_val: 0.0125, aux_identity.loss_ce: 0.0106, aux_identity.acc_seg: 7.5234, loss: 0.0106
+2025-04-28 20:21:34,135 - mmseg - INFO - per class results:
+2025-04-28 20:21:34,136 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|   Bicyle Frame   | 69.33 | 84.51 |
+|   Bicyle Wheel   | 96.24 | 98.07 |
+| Bicyle Handlebar | 79.94 | 90.51 |
+|   Bicycle Seat   | 79.57 | 92.26 |
+|  Bicycle Pedal   | 30.73 | 35.81 |
+|  Bicycle Chain   | 59.48 | 67.24 |
++------------------+-------+-------+
+2025-04-28 20:21:34,136 - mmseg - INFO - Summary:
+2025-04-28 20:21:34,136 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 93.06 | 69.22 | 78.07 |
++-------+-------+-------+
+2025-04-28 20:21:34,136 - mmseg - INFO - Iter(val) [540]	aAcc: 0.9306, mIoU: 0.6922, mAcc: 0.7807, IoU.Bicyle Frame: 0.6933, IoU.Bicyle Wheel: 0.9624, IoU.Bicyle Handlebar: 0.7994, IoU.Bicycle Seat: 0.7957, IoU.Bicycle Pedal: 0.3073, IoU.Bicycle Chain: 0.5948, Acc.Bicyle Frame: 0.8451, Acc.Bicyle Wheel: 0.9807, Acc.Bicyle Handlebar: 0.9051, Acc.Bicycle Seat: 0.9226, Acc.Bicycle Pedal: 0.3581, Acc.Bicycle Chain: 0.6724
+2025-04-28 20:22:01,917 - mmseg - INFO - Iter [550/1000]	lr: 1.975e-06, eta: 0:03:53, time: 0.551, data_time: 0.048, memory: 19318, aux_identity.loss_ce_val: 0.0088, aux_identity.acc_seg_val: 5.5105, loss_val: 0.0088, aux_identity.loss_ce: 0.0091, aux_identity.acc_seg: 7.8120, loss: 0.0091
+2025-04-28 20:22:27,249 - mmseg - INFO - Iter [600/1000]	lr: 1.978e-06, eta: 0:03:26, time: 0.507, data_time: 0.006, memory: 19318, aux_identity.loss_ce_val: 0.0088, aux_identity.acc_seg_val: 5.5105, loss_val: 0.0088, aux_identity.loss_ce: 0.0079, aux_identity.acc_seg: 7.8149, loss: 0.0079
+2025-04-28 20:22:45,413 - mmseg - INFO - per class results:
+2025-04-28 20:22:45,413 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|   Bicyle Frame   | 72.12 | 81.68 |
+|   Bicyle Wheel   | 96.76 | 98.81 |
+| Bicyle Handlebar | 83.26 |  94.9 |
+|   Bicycle Seat   | 81.58 | 86.71 |
+|  Bicycle Pedal   | 46.47 | 67.56 |
+|  Bicycle Chain   | 66.71 | 78.41 |
++------------------+-------+-------+
+2025-04-28 20:22:45,413 - mmseg - INFO - Summary:
+2025-04-28 20:22:45,413 - mmseg - INFO - 
++------+-------+-------+
+| aAcc |  mIoU |  mAcc |
++------+-------+-------+
+| 94.0 | 74.48 | 84.68 |
++------+-------+-------+
+2025-04-28 20:22:45,414 - mmseg - INFO - Iter(val) [540]	aAcc: 0.9400, mIoU: 0.7448, mAcc: 0.8468, IoU.Bicyle Frame: 0.7212, IoU.Bicyle Wheel: 0.9676, IoU.Bicyle Handlebar: 0.8326, IoU.Bicycle Seat: 0.8158, IoU.Bicycle Pedal: 0.4647, IoU.Bicycle Chain: 0.6671, Acc.Bicyle Frame: 0.8168, Acc.Bicyle Wheel: 0.9881, Acc.Bicyle Handlebar: 0.9490, Acc.Bicycle Seat: 0.8671, Acc.Bicycle Pedal: 0.6756, Acc.Bicycle Chain: 0.7841
+2025-04-28 20:23:10,801 - mmseg - INFO - Iter [650/1000]	lr: 1.950e-06, eta: 0:03:00, time: 0.503, data_time: 0.006, memory: 19318, aux_identity.loss_ce_val: 0.0027, aux_identity.acc_seg_val: 3.3067, loss_val: 0.0027, aux_identity.loss_ce: 0.0076, aux_identity.acc_seg: 7.5109, loss: 0.0076
+2025-04-28 20:23:37,591 - mmseg - INFO - Iter [700/1000]	lr: 1.889e-06, eta: 0:02:35, time: 0.536, data_time: 0.048, memory: 19318, aux_identity.loss_ce_val: 0.0027, aux_identity.acc_seg_val: 3.3067, loss_val: 0.0027, aux_identity.loss_ce: 0.0073, aux_identity.acc_seg: 8.2335, loss: 0.0073
+2025-04-28 20:23:53,939 - mmseg - INFO - per class results:
+2025-04-28 20:23:53,940 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|   Bicyle Frame   |  72.9 |  84.4 |
+|   Bicyle Wheel   | 96.78 | 98.51 |
+| Bicyle Handlebar | 85.09 | 94.51 |
+|   Bicycle Seat   |  81.1 | 85.61 |
+|  Bicycle Pedal   | 51.53 | 75.34 |
+|  Bicycle Chain   | 68.24 | 74.24 |
++------------------+-------+-------+
+2025-04-28 20:23:53,940 - mmseg - INFO - Summary:
+2025-04-28 20:23:53,940 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 94.21 | 75.94 | 85.44 |
++-------+-------+-------+
+2025-04-28 20:23:53,940 - mmseg - INFO - Iter(val) [540]	aAcc: 0.9421, mIoU: 0.7594, mAcc: 0.8544, IoU.Bicyle Frame: 0.7290, IoU.Bicyle Wheel: 0.9678, IoU.Bicyle Handlebar: 0.8509, IoU.Bicycle Seat: 0.8110, IoU.Bicycle Pedal: 0.5153, IoU.Bicycle Chain: 0.6824, Acc.Bicyle Frame: 0.8440, Acc.Bicyle Wheel: 0.9851, Acc.Bicyle Handlebar: 0.9451, Acc.Bicycle Seat: 0.8561, Acc.Bicycle Pedal: 0.7534, Acc.Bicycle Chain: 0.7424
+2025-04-28 20:24:18,625 - mmseg - INFO - Iter [750/1000]	lr: 1.795e-06, eta: 0:02:08, time: 0.489, data_time: 0.006, memory: 19318, aux_identity.loss_ce_val: 0.0045, aux_identity.acc_seg_val: 8.5280, loss_val: 0.0045, aux_identity.loss_ce: 0.0070, aux_identity.acc_seg: 7.8513, loss: 0.0070
+2025-04-28 20:24:43,163 - mmseg - INFO - Iter [800/1000]	lr: 1.664e-06, eta: 0:01:42, time: 0.491, data_time: 0.006, memory: 19318, aux_identity.loss_ce_val: 0.0045, aux_identity.acc_seg_val: 8.5280, loss_val: 0.0045, aux_identity.loss_ce: 0.0061, aux_identity.acc_seg: 7.8416, loss: 0.0061
+2025-04-28 20:24:59,548 - mmseg - INFO - per class results:
+2025-04-28 20:24:59,548 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|   Bicyle Frame   | 74.99 | 85.04 |
+|   Bicyle Wheel   | 96.94 | 98.59 |
+| Bicyle Handlebar | 86.07 | 94.43 |
+|   Bicycle Seat   | 84.93 | 88.87 |
+|  Bicycle Pedal   | 52.65 | 75.59 |
+|  Bicycle Chain   | 70.18 | 79.42 |
++------------------+-------+-------+
+2025-04-28 20:24:59,548 - mmseg - INFO - Summary:
+2025-04-28 20:24:59,548 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 94.71 | 77.63 | 86.99 |
++-------+-------+-------+
+2025-04-28 20:24:59,549 - mmseg - INFO - Iter(val) [540]	aAcc: 0.9471, mIoU: 0.7763, mAcc: 0.8699, IoU.Bicyle Frame: 0.7499, IoU.Bicyle Wheel: 0.9694, IoU.Bicyle Handlebar: 0.8607, IoU.Bicycle Seat: 0.8493, IoU.Bicycle Pedal: 0.5265, IoU.Bicycle Chain: 0.7018, Acc.Bicyle Frame: 0.8504, Acc.Bicyle Wheel: 0.9859, Acc.Bicyle Handlebar: 0.9443, Acc.Bicycle Seat: 0.8887, Acc.Bicycle Pedal: 0.7559, Acc.Bicycle Chain: 0.7942
+2025-04-28 20:25:26,424 - mmseg - INFO - Iter [850/1000]	lr: 1.495e-06, eta: 0:01:17, time: 0.533, data_time: 0.049, memory: 19318, aux_identity.loss_ce_val: 0.0058, aux_identity.acc_seg_val: 11.1627, loss_val: 0.0058, aux_identity.loss_ce: 0.0058, aux_identity.acc_seg: 8.2504, loss: 0.0058
+2025-04-28 20:25:50,908 - mmseg - INFO - Iter [900/1000]	lr: 1.285e-06, eta: 0:00:51, time: 0.490, data_time: 0.006, memory: 19318, aux_identity.loss_ce_val: 0.0058, aux_identity.acc_seg_val: 11.1627, loss_val: 0.0058, aux_identity.loss_ce: 0.0062, aux_identity.acc_seg: 7.4758, loss: 0.0062
+2025-04-28 20:26:07,340 - mmseg - INFO - per class results:
+2025-04-28 20:26:07,340 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|   Bicyle Frame   | 76.04 | 83.84 |
+|   Bicyle Wheel   | 97.06 | 98.79 |
+| Bicyle Handlebar |  88.9 |  96.1 |
+|   Bicycle Seat   | 86.38 | 92.03 |
+|  Bicycle Pedal   | 54.39 | 76.99 |
+|  Bicycle Chain   | 70.13 | 80.44 |
++------------------+-------+-------+
+2025-04-28 20:26:07,340 - mmseg - INFO - Summary:
+2025-04-28 20:26:07,341 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 95.05 | 78.82 | 88.03 |
++-------+-------+-------+
+2025-04-28 20:26:07,341 - mmseg - INFO - Iter(val) [540]	aAcc: 0.9505, mIoU: 0.7882, mAcc: 0.8803, IoU.Bicyle Frame: 0.7604, IoU.Bicyle Wheel: 0.9706, IoU.Bicyle Handlebar: 0.8890, IoU.Bicycle Seat: 0.8638, IoU.Bicycle Pedal: 0.5439, IoU.Bicycle Chain: 0.7013, Acc.Bicyle Frame: 0.8384, Acc.Bicyle Wheel: 0.9879, Acc.Bicyle Handlebar: 0.9610, Acc.Bicycle Seat: 0.9203, Acc.Bicycle Pedal: 0.7699, Acc.Bicycle Chain: 0.8044
+2025-04-28 20:26:34,266 - mmseg - INFO - Iter [950/1000]	lr: 1.024e-06, eta: 0:00:25, time: 0.534, data_time: 0.049, memory: 19318, aux_identity.loss_ce_val: 0.0032, aux_identity.acc_seg_val: 5.0020, loss_val: 0.0032, aux_identity.loss_ce: 0.0059, aux_identity.acc_seg: 8.4283, loss: 0.0059
+2025-04-28 20:26:58,743 - mmseg - INFO - Saving checkpoint at 1000 iterations
+2025-04-28 20:27:01,809 - mmseg - INFO - Exp name: simpledenseclip_bicycle.py
+2025-04-28 20:27:01,809 - mmseg - INFO - Iter [1000/1000]	lr: 6.780e-07, eta: 0:00:00, time: 0.551, data_time: 0.006, memory: 19318, aux_identity.loss_ce_val: 0.0032, aux_identity.acc_seg_val: 5.0020, loss_val: 0.0032, aux_identity.loss_ce: 0.0052, aux_identity.acc_seg: 7.4493, loss: 0.0052
+2025-04-28 20:27:18,065 - mmseg - INFO - per class results:
+2025-04-28 20:27:18,066 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|   Bicyle Frame   | 76.82 | 84.89 |
+|   Bicyle Wheel   | 97.27 | 99.03 |
+| Bicyle Handlebar | 89.87 | 96.07 |
+|   Bicycle Seat   | 86.42 |  90.9 |
+|  Bicycle Pedal   | 55.81 | 75.74 |
+|  Bicycle Chain   | 71.77 |  82.8 |
++------------------+-------+-------+
+2025-04-28 20:27:18,066 - mmseg - INFO - Summary:
+2025-04-28 20:27:18,066 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 95.29 | 79.66 | 88.24 |
++-------+-------+-------+
+2025-04-28 20:27:18,066 - mmseg - INFO - Exp name: simpledenseclip_bicycle.py
+2025-04-28 20:27:18,066 - mmseg - INFO - Iter(val) [540]	aAcc: 0.9529, mIoU: 0.7966, mAcc: 0.8824, IoU.Bicyle Frame: 0.7682, IoU.Bicyle Wheel: 0.9727, IoU.Bicyle Handlebar: 0.8987, IoU.Bicycle Seat: 0.8642, IoU.Bicycle Pedal: 0.5581, IoU.Bicycle Chain: 0.7177, Acc.Bicyle Frame: 0.8489, Acc.Bicyle Wheel: 0.9903, Acc.Bicyle Handlebar: 0.9607, Acc.Bicycle Seat: 0.9090, Acc.Bicycle Pedal: 0.7574, Acc.Bicycle Chain: 0.8280

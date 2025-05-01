@@ -25,4 +25,6 @@ class IdentityHead(BaseDecodeHead):
         self.conv_seg = None
 
     def forward(self, inputs):
+        # TODO Upsample here
+        
         return inputs
