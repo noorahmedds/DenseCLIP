@@ -553,6 +553,12 @@ class CLIPVisionTransformer(nn.Module):
                 xp = x.permute(1, 0, 2)[:, 1:, :].permute(0, 2, 1).reshape(B, -1, H, W)
                 features.append(xp.contiguous())
 
+        # for i, blk in enumerate(self.transformer.resblocks):
+        #     x = blk(x)
+        #     if i in self.out_indices:
+        #         xp = x.permute(1, 0, 2)[:, 1:, :].permute(0, 2, 1).reshape(B, -1, H, W)
+        #         features.append(xp.contiguous())
+
 
         if self.dense:
             # TODO: Not needed, you may leave it here for now
@@ -599,11 +605,6 @@ class CLIPVisionTransformer(nn.Module):
             # Original Attnetion mechanism
             attn_weights = torch.bmm(q * scale, k.transpose(1, 2))
             attn_weights = F.softmax(attn_weights, dim=-1)
-
-        # This is the change they make for clip
-        q_attn = torch.bmm(q, q.transpose(1, 2)) * scale
-        k_attn = torch.bmm(k, k.transpose(1, 2)) * scale
-        attn_weights = F.softmax(q_attn, dim=-1) + F.softmax(k_attn, dim=-1)
 
         attn_output = torch.bmm(attn_weights, v)
         attn_output = attn_output.transpose(0, 1).contiguous().view(-1, bsz, embed_dim)
@@ -719,7 +720,7 @@ class CLIPTextContextEncoder(nn.Module):
         self.text_projection = nn.Parameter(torch.empty(transformer_width, embed_dim))
 
     def init_weights(self, pretrained=None):
-        breakpoint()
+        # breakpoint()
         
         pretrained = pretrained or self.pretrained
         if isinstance(pretrained, str):

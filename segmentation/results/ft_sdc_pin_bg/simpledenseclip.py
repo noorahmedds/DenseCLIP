@@ -180,5 +180,5 @@ runner = dict(type='IterBasedRunner', max_iters=20000)
 checkpoint_config = dict(by_epoch=False, interval=2000)
 evaluation = dict(interval=2000, metric='mIoU')
 norm_cfg = dict(type='SyncBN', requires_grad=True)
-work_dir = './results/ft_sdc_pin'
+work_dir = './results/ft_sdc_pin_bg'
 gpu_ids = range(0, 1)

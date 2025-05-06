@@ -107,7 +107,7 @@ def main():
         init_dist(args.launcher, **cfg.dist_params)
 
     # build the dataloader
-    # TODO: support multiple images per gpu (only minor changes are needed)
+
     dataset = build_dataset(cfg.data.test)
     data_loader = build_dataloader(
         dataset,

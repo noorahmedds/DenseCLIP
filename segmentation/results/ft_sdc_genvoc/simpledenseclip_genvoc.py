@@ -1,11 +1,9 @@
-dataset_type = 'PartImageNet'
-data_root = '/home/noah00001/Desktop/dataset/PartImageNet'
-IMG_MEAN = [122.7709383, 116.7460125, 104.09373615000001]
-IMG_VAR = [68.5005327, 66.6321579, 70.32316304999999]
+dataset_type = 'PascalVOCDataset'
+data_root = '/home/noah00001/Desktop/dataset/gen_voc_release'
 img_norm_cfg = dict(
-    mean=[122.7709383, 116.7460125, 104.09373615000001],
-    std=[68.5005327, 66.6321579, 70.32316304999999],
-    to_rgb=True)
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+unseen_dataset_type = 'PartImageNet'
+unseen_data_root = '/home/noah00001/Desktop/dataset/PartImageNet'
 crop_size = (640, 640)
 model = dict(
     identity_head=dict(
@@ -15,6 +13,7 @@ model = dict(
         num_classes=1,
         dropout_ratio=0.1,
         align_corners=False,
+        ignore_index=255,
         loss_decode=dict(
             type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4)),
     type='SimpleDenseCLIP',
@@ -54,8 +53,8 @@ train_pipeline = [
     dict(type='PhotoMetricDistortion'),
     dict(
         type='Normalize',
-        mean=[122.7709383, 116.7460125, 104.09373615000001],
-        std=[68.5005327, 66.6321579, 70.32316304999999],
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
         to_rgb=True),
     dict(type='Pad', size=(640, 640), pad_val=0, seg_pad_val=255),
     dict(type='DefaultFormatBundle'),
@@ -65,15 +64,15 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(2048, 640),
+        img_scale=(2048, 512),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
             dict(type='RandomFlip'),
             dict(
                 type='Normalize',
-                mean=[122.7709383, 116.7460125, 104.09373615000001],
-                std=[68.5005327, 66.6321579, 70.32316304999999],
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375],
                 to_rgb=True),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img'])
@@ -83,10 +82,11 @@ data = dict(
     samples_per_gpu=4,
     workers_per_gpu=4,
     train=dict(
-        type='PartImageNet',
-        data_root='/home/noah00001/Desktop/dataset/PartImageNet',
-        img_dir='images/train',
-        ann_dir='annotations/train',
+        type='PascalVOCDataset',
+        data_root='/home/noah00001/Desktop/dataset/gen_voc_release',
+        img_dir='JPEGImages',
+        ann_dir='SegmentationClass',
+        split='ImageSets/Segmentation/train.txt',
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(type='LoadAnnotations'),
@@ -96,8 +96,8 @@ data = dict(
             dict(type='PhotoMetricDistortion'),
             dict(
                 type='Normalize',
-                mean=[122.7709383, 116.7460125, 104.09373615000001],
-                std=[68.5005327, 66.6321579, 70.32316304999999],
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375],
                 to_rgb=True),
             dict(type='Pad', size=(640, 640), pad_val=0, seg_pad_val=255),
             dict(type='DefaultFormatBundle'),
@@ -112,15 +112,15 @@ data = dict(
             dict(type='LoadImageFromFile'),
             dict(
                 type='MultiScaleFlipAug',
-                img_scale=(2048, 640),
+                img_scale=(2048, 512),
                 flip=False,
                 transforms=[
                     dict(type='Resize', keep_ratio=True),
                     dict(type='RandomFlip'),
                     dict(
                         type='Normalize',
-                        mean=[122.7709383, 116.7460125, 104.09373615000001],
-                        std=[68.5005327, 66.6321579, 70.32316304999999],
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
                         to_rgb=True),
                     dict(type='ImageToTensor', keys=['img']),
                     dict(type='Collect', keys=['img'])
@@ -135,15 +135,15 @@ data = dict(
             dict(type='LoadImageFromFile'),
             dict(
                 type='MultiScaleFlipAug',
-                img_scale=(2048, 640),
+                img_scale=(2048, 512),
                 flip=False,
                 transforms=[
                     dict(type='Resize', keep_ratio=True),
                     dict(type='RandomFlip'),
                     dict(
                         type='Normalize',
-                        mean=[122.7709383, 116.7460125, 104.09373615000001],
-                        std=[68.5005327, 66.6321579, 70.32316304999999],
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
                         to_rgb=True),
                     dict(type='ImageToTensor', keys=['img']),
                     dict(type='Collect', keys=['img'])
@@ -163,10 +163,12 @@ optimizer = dict(
     lr=0.0001,
     weight_decay=0.0001,
     paramwise_cfg=dict(
-        custom_keys=dict(
-            backbone=dict(lr_mult=0.1),
-            text_encoder=dict(lr_mult=0.0),
-            norm=dict(decay_mult=0.0))))
+        custom_keys=dict({
+            'backbone': dict(lr_mult=0.0),
+            'backbone.resblocks.11': dict(lr_mult=0.1),
+            'text_encoder': dict(lr_mult=0.0),
+            'norm': dict(decay_mult=0.0)
+        })))
 optimizer_config = dict()
 lr_config = dict(
     policy='poly',
@@ -180,5 +182,5 @@ runner = dict(type='IterBasedRunner', max_iters=20000)
 checkpoint_config = dict(by_epoch=False, interval=2000)
 evaluation = dict(interval=2000, metric='mIoU')
 norm_cfg = dict(type='SyncBN', requires_grad=True)
-work_dir = './results/ft_sdc_pin'
-gpu_ids = range(0, 1)
+work_dir = './results/ft_sdc_genvoc'
+gpu_ids = range(0, 0)

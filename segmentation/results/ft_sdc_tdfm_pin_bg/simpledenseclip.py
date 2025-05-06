@@ -1,5 +1,5 @@
-dataset_type = 'PartImageNet'
-data_root = '/home/noah00001/Desktop/dataset/PartImageNet'
+dataset_type = 'TDFM_PIN'
+data_root = '/home/noah00001/Desktop/dataset/TDFM_PIN'
 IMG_MEAN = [122.7709383, 116.7460125, 104.09373615000001]
 IMG_VAR = [68.5005327, 66.6321579, 70.32316304999999]
 img_norm_cfg = dict(
@@ -15,6 +15,7 @@ model = dict(
         num_classes=1,
         dropout_ratio=0.1,
         align_corners=False,
+        ignore_index=255,
         loss_decode=dict(
             type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4)),
     type='SimpleDenseCLIP',
@@ -83,8 +84,8 @@ data = dict(
     samples_per_gpu=4,
     workers_per_gpu=4,
     train=dict(
-        type='PartImageNet',
-        data_root='/home/noah00001/Desktop/dataset/PartImageNet',
+        type='TDFM_PIN',
+        data_root='/home/noah00001/Desktop/dataset/TDFM_PIN',
         img_dir='images/train',
         ann_dir='annotations/train',
         pipeline=[
@@ -104,8 +105,8 @@ data = dict(
             dict(type='Collect', keys=['img', 'gt_semantic_seg'])
         ]),
     val=dict(
-        type='PartImageNet',
-        data_root='/home/noah00001/Desktop/dataset/PartImageNet',
+        type='TDFM_PIN',
+        data_root='/home/noah00001/Desktop/dataset/TDFM_PIN',
         img_dir='images/val',
         ann_dir='annotations/val',
         pipeline=[
@@ -127,10 +128,10 @@ data = dict(
                 ])
         ]),
     test=dict(
-        type='PartImageNet',
-        data_root='/home/noah00001/Desktop/dataset/PartImageNet',
-        img_dir='images/test',
-        ann_dir='annotations/test',
+        type='TDFM_PIN',
+        data_root='/home/noah00001/Desktop/dataset/TDFM_PIN',
+        img_dir='images/val',
+        ann_dir='annotations/val',
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(
@@ -180,5 +181,5 @@ runner = dict(type='IterBasedRunner', max_iters=20000)
 checkpoint_config = dict(by_epoch=False, interval=2000)
 evaluation = dict(interval=2000, metric='mIoU')
 norm_cfg = dict(type='SyncBN', requires_grad=True)
-work_dir = './results/ft_sdc_pin'
+work_dir = './results/ft_sdc_tdfm_pin_bg'
 gpu_ids = range(0, 1)

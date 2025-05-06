@@ -1,13 +1,7 @@
-
 _base_ = [
-    '_base_/datasets/partimagenet_clip_640.py',
+    "_base_/datasets/genvoc.py",
     '_base_/default_runtime.py', '_base_/schedules/schedule_20k.py'
 ]
-
-# _base_ = [
-#     '_base_/datasets/tdfm_pin_clip_640.py',
-#     '_base_/default_runtime.py', '_base_/schedules/schedule_20k.py'
-# ]
 
 # model settings
 norm_cfg = dict(type='SyncBN', requires_grad=True)
@@ -40,7 +34,6 @@ model = dict(
         transformer_layers=12,
         style='pytorch'),
     train_cfg=dict(),
-    # test_cfg=dict(mode='slide', crop_size=(640, 640), stride=(426, 426)), 
     test_cfg=dict(mode='whole')
 )
 
@@ -51,7 +44,8 @@ lr_config = dict(policy='poly', power=0.9, min_lr=1e-6, by_epoch=False,
 
 
 optimizer = dict(type='AdamW', lr=0.0001, weight_decay=0.0001, 
-        paramwise_cfg=dict(custom_keys={'backbone': dict(lr_mult=0.01),
+        paramwise_cfg=dict(custom_keys={'backbone': dict(lr_mult=0.0),
+                                        'backbone.resblocks.11': dict(lr_mult=0.1),
                                         'text_encoder': dict(lr_mult=0.0),  # Not getting trained
                                         'norm': dict(decay_mult=0.)}))
 

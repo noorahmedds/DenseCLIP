@@ -1,13 +1,13 @@
 
-_base_ = [
-    '_base_/datasets/partimagenet_clip_640.py',
-    '_base_/default_runtime.py', '_base_/schedules/schedule_20k.py'
-]
-
 # _base_ = [
-#     '_base_/datasets/tdfm_pin_clip_640.py',
+#     '_base_/datasets/partimagenet_clip_640.py',
 #     '_base_/default_runtime.py', '_base_/schedules/schedule_20k.py'
 # ]
+
+_base_ = [
+    '_base_/datasets/tdfm_pin_clip_640.py',
+    '_base_/default_runtime.py', '_base_/schedules/schedule_20k.py'
+]
 
 # model settings
 norm_cfg = dict(type='SyncBN', requires_grad=True)
@@ -52,9 +52,11 @@ lr_config = dict(policy='poly', power=0.9, min_lr=1e-6, by_epoch=False,
 
 optimizer = dict(type='AdamW', lr=0.0001, weight_decay=0.0001, 
         paramwise_cfg=dict(custom_keys={'backbone': dict(lr_mult=0.01),
-                                        'text_encoder': dict(lr_mult=0.0),  # Not getting trained
+                                        'text_encoder': dict(lr_mult=0.01),  # Not getting trained
                                         'norm': dict(decay_mult=0.)}))
 
 data = dict(samples_per_gpu=4)
+checkpoint_config = dict(by_epoch=False, interval=2000)
+evaluation = dict(interval=2000, metric='mIoU')
 
-# workflow = [('train', 100), ('val', 2)]
+workflow = [('train', 100), ('val', 2)]

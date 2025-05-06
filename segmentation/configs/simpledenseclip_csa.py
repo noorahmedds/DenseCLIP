@@ -29,6 +29,7 @@ model = dict(
         layers=12,
         input_resolution=640,
         dense=False,
+        csa=True,
         style='pytorch'),
     text_encoder=dict(
         type='CLIPTextEncoder',
@@ -51,7 +52,7 @@ lr_config = dict(policy='poly', power=0.9, min_lr=1e-6, by_epoch=False,
 
 
 optimizer = dict(type='AdamW', lr=0.0001, weight_decay=0.0001, 
-        paramwise_cfg=dict(custom_keys={'backbone': dict(lr_mult=0.01),
+        paramwise_cfg=dict(custom_keys={'backbone': dict(lr_mult=0.1),
                                         'text_encoder': dict(lr_mult=0.0),  # Not getting trained
                                         'norm': dict(decay_mult=0.)}))
 

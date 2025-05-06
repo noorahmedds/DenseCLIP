@@ -214,6 +214,10 @@ class SimpleDenseCLIP(BaseSegmentor):
 
         # Compute the pixel aligned score map
         score_map = torch.einsum('bchw,bkc->bkhw', visual_embeddings, text)
+        
+        # breakpoint()
+        # TODO: Implement the global contrastic loss like this: https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/loss.py#L145
+        # Essentially it would be cross entropy applied to the ground truth labels and the text logits and also the same for image logits. I.e. the logits need to be highest for the correct logit
 
         # Concatenating language context to the FPN input
         # x_orig[self.score_concat_index] = torch.cat([x_orig[self.score_concat_index], score_map], dim=1)
@@ -255,6 +259,8 @@ class SimpleDenseCLIP(BaseSegmentor):
             loss_identity = self._identity_head_forward_train(
                 score_map/self.tau, img_metas, gt_semantic_seg)
             losses.update(loss_identity)
+            
+        # Compute the loss here and update the losses directly here
 
         # if self.with_auxiliary_head:
         #     loss_aux = self._auxiliary_head_forward_train(

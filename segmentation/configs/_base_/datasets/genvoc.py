@@ -1,13 +1,12 @@
 # dataset settings
-dataset_type = 'TDFM_PIN'
-data_root = '/home/noah00001/Desktop/dataset/TDFM_PIN'
-IMG_MEAN = [ v*255 for v in [0.48145466, 0.4578275, 0.40821073]]
-IMG_VAR = [ v*255 for v in [0.26862954, 0.26130258, 0.27577711]]
+dataset_type = 'PascalVOCDataset'
+data_root = '/home/noah00001/Desktop/dataset/gen_voc_release'
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
 unseen_dataset_type = 'PartImageNet'
 unseen_data_root = '/home/noah00001/Desktop/dataset/PartImageNet'
 
-img_norm_cfg = dict(mean=IMG_MEAN, std=IMG_VAR, to_rgb=True)
 crop_size = (640, 640)
 
 model = dict(
@@ -39,8 +38,8 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(2048, 640),
-        #img_ratios=[0.5, 0.75, 1.0, 1.25, 1.5, 1.75],
+        img_scale=(2048, 512),
+        # img_ratios=[0.5, 0.75, 1.0, 1.25, 1.5, 1.75],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -56,8 +55,9 @@ data = dict(
     train=dict(
         type=dataset_type,
         data_root=data_root,
-        img_dir='images/train',
-        ann_dir='annotations/train',
+        img_dir='JPEGImages',
+        ann_dir='SegmentationClass',
+        split="ImageSets/Segmentation/train.txt",
         pipeline=train_pipeline),
     val=dict(
         type=unseen_dataset_type,

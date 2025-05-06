@@ -265,10 +265,7 @@ class TDFM_PIN(CustomDataset):
         split (str): Split txt file for Pascal VOC.
     """
 
-    CLASSES=("Bicyle Frame", "Bicyle Wheel", "Bicyle Handlebar", "Bicycle Seat", "Bicycle Pedal", "Bicycle Chain")
-    PALETTE = [[ 54,  20,  67], [ 77, 111,  75], [115,   0,  51], [ 84, 124, 148], [212,  28, 207], [ 55, 146, 221]]
-
-    CLASSES= ['Biped Head', 'Biped Torso', 'Biped LeftArm', 'Biped RightArm', 'Biped LeftLeg', 'Biped RightLeg', 'Biped LeftFoot', 'Biped RightFoot', 'Quadruped Head', 'Quadruped Snout', 'Quadruped Eye', 'Quadruped Body', 'Quadruped Leg', 'Quadruped Tail', 'Quadruped Ear', 'Snake Head', 'Snake BodySegment', 'Snake Tail', 'Snake Eye', 'Snake Tongue', 'Car Wheel', 'Car CarBody', 'Car CarRoof', 'Car FrontWindow', 'Car RearWindow', 'Car Seat', 'Boat Hull', 'Boat Deck', 'Boat Railing', 'Boat Mast', 'Boat Sail', 'Boat Rudder', 'Bottle Base', 'Bottle Body', 'Bottle Neck', 'Bottle Cap', 'Reptile Body', 'Reptile Head', 'Reptile FrontLeg', 'Reptile BackLeg', 'Reptile Tail', 'Reptile Eye', 'Reptile Tongue', 'Bicycle FrameTopTube', 'Bicycle FrameSeatTube', 'Bicycle FrameDownTube', 'Bicycle FrontWheel', 'Bicycle RearWheel', 'Bicycle Handlebar', 'Bicycle Seat', 'Bicycle LeftPedal', 'Bicycle RightPedal', 'Fish Body', 'Fish Head', 'Fish TailFin', 'Fish DorsalFin', 'Fish PectoralFin', 'Fish Eye', 'Bird Body', 'Aeroplane Fuselage', 'Aeroplane Wing', 'Aeroplane VerticalStabilizer', 'Aeroplane HorizontalStabilizer', 'Aeroplane Engine', 'Aeroplane LandingGear', 'Aeroplane Nose', 'Aeroplane Cockpit']
+    CLASSES= ['Biped Head', 'Biped Torso', 'Biped LeftArm', 'Biped RightArm', 'Biped LeftLeg', 'Biped RightLeg', 'Biped LeftFoot', 'Biped RightFoot', 'Quadruped Head', 'Quadruped Snout', 'Quadruped Eye', 'Quadruped Body', 'Quadruped Leg', 'Quadruped Tail', 'Quadruped Ear', 'Snake Head', 'Snake BodySegment', 'Snake Tail', 'Snake Eye', 'Snake Tongue', 'Car Wheel', 'Car CarBody', 'Car CarRoof', 'Car FrontWindow', 'Car RearWindow', 'Car Seat', 'Boat Hull', 'Boat Deck', 'Boat Railing', 'Boat Mast', 'Boat Sail', 'Boat Rudder', 'Bottle Base', 'Bottle Body', 'Bottle Neck', 'Bottle Cap', 'Reptile Body', 'Reptile Head', 'Reptile FrontLeg', 'Reptile BackLeg', 'Reptile Tail', 'Reptile Eye', 'Reptile Tongue', 'Bicycle FrameTopTube', 'Bicycle FrameSeatTube', 'Bicycle FrameDownTube', 'Bicycle FrontWheel', 'Bicycle RearWheel', 'Bicycle Handlebar', 'Bicycle Seat', 'Bicycle LeftPedal', 'Bicycle RightPedal', 'Fish Body', 'Fish Head', 'Fish TailFin', 'Fish DorsalFin', 'Fish PectoralFin', 'Fish Eye', 'Bird Body', 'Aeroplane Fuselage', 'Aeroplane Wing', 'Aeroplane VerticalStabilizer', 'Aeroplane HorizontalStabilizer', 'Aeroplane Engine', 'Aeroplane LandingGear', 'Aeroplane Nose', 'Aeroplane Cockpit', 'Background']
     
     PALETTE = [[224,  99,  23], [ 22,  82, 200], [ 27,  82,  48], [168, 108, 143], [ 26,  88, 239], [ 81,  43,  81], 
                [ 74, 233,  82], [ 86,  57, 136], [ 86, 140, 235], [223, 168, 219], [224,  17, 145], [ 16, 175, 151], 
@@ -281,7 +278,7 @@ class TDFM_PIN(CustomDataset):
                [ 64, 131, 111], [ 96, 100,  16], [ 44, 157, 246], [218, 107, 127], [242,  32,  11], [ 45,  19, 149], 
                [160, 245, 170], [ 62,  31, 157], [136,  45,  46], [ 55, 105,  42], [ 84, 216,  57], [166, 169, 179], 
                [ 82, 135,  70], [ 23,   8, 118], [ 69, 149,  65], [183,  46, 200], [223,  86, 188], [199, 243,  54], 
-               [ 30, 219,  39]]
+               [ 30, 219,  39], [255, 255, 255]]
         
 
     def __init__(self, **kwargs) -> None:

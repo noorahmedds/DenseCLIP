@@ -15,6 +15,7 @@ model = dict(
         num_classes=1,
         dropout_ratio=0.1,
         align_corners=False,
+        ignore_index=40,
         loss_decode=dict(
             type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4)),
     type='SimpleDenseCLIP',
@@ -163,10 +164,12 @@ optimizer = dict(
     lr=0.0001,
     weight_decay=0.0001,
     paramwise_cfg=dict(
-        custom_keys=dict(
-            backbone=dict(lr_mult=0.1),
-            text_encoder=dict(lr_mult=0.0),
-            norm=dict(decay_mult=0.0))))
+        custom_keys=dict({
+            'backbone': dict(lr_mult=0.01),
+            'backbone.resblocks.11': dict(lr_mult=0.1),
+            'text_encoder': dict(lr_mult=0.0),
+            'norm': dict(decay_mult=0.0)
+        })))
 optimizer_config = dict()
 lr_config = dict(
     policy='poly',
@@ -180,5 +183,5 @@ runner = dict(type='IterBasedRunner', max_iters=20000)
 checkpoint_config = dict(by_epoch=False, interval=2000)
 evaluation = dict(interval=2000, metric='mIoU')
 norm_cfg = dict(type='SyncBN', requires_grad=True)
-work_dir = './results/ft_sdc_pin'
+work_dir = './results/ft_sdc_pin_last_layer'
 gpu_ids = range(0, 1)

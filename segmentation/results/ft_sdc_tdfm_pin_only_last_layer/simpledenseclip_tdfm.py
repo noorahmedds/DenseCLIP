@@ -1,7 +1,9 @@
-dataset_type = 'PartImageNet'
-data_root = '/home/noah00001/Desktop/dataset/PartImageNet'
+dataset_type = 'TDFM_PIN'
+data_root = '/home/noah00001/Desktop/dataset/TDFM_PIN'
 IMG_MEAN = [122.7709383, 116.7460125, 104.09373615000001]
 IMG_VAR = [68.5005327, 66.6321579, 70.32316304999999]
+unseen_dataset_type = 'PartImageNet'
+unseen_data_root = '/home/noah00001/Desktop/dataset/PartImageNet'
 img_norm_cfg = dict(
     mean=[122.7709383, 116.7460125, 104.09373615000001],
     std=[68.5005327, 66.6321579, 70.32316304999999],
@@ -15,6 +17,7 @@ model = dict(
         num_classes=1,
         dropout_ratio=0.1,
         align_corners=False,
+        ignore_index=255,
         loss_decode=dict(
             type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4)),
     type='SimpleDenseCLIP',
@@ -83,8 +86,8 @@ data = dict(
     samples_per_gpu=4,
     workers_per_gpu=4,
     train=dict(
-        type='PartImageNet',
-        data_root='/home/noah00001/Desktop/dataset/PartImageNet',
+        type='TDFM_PIN',
+        data_root='/home/noah00001/Desktop/dataset/TDFM_PIN',
         img_dir='images/train',
         ann_dir='annotations/train',
         pipeline=[
@@ -155,7 +158,7 @@ dist_params = dict(backend='nccl')
 log_level = 'INFO'
 load_from = None
 resume_from = None
-workflow = [('train', 1)]
+workflow = [('train', 100), ('val', 2)]
 cudnn_benchmark = True
 find_unused_parameters = True
 optimizer = dict(
@@ -163,10 +166,12 @@ optimizer = dict(
     lr=0.0001,
     weight_decay=0.0001,
     paramwise_cfg=dict(
-        custom_keys=dict(
-            backbone=dict(lr_mult=0.1),
-            text_encoder=dict(lr_mult=0.0),
-            norm=dict(decay_mult=0.0))))
+        custom_keys=dict({
+            'backbone': dict(lr_mult=0.0),
+            'backbone.resblocks.11': dict(lr_mult=0.1),
+            'text_encoder': dict(lr_mult=0.0),
+            'norm': dict(decay_mult=0.0)
+        })))
 optimizer_config = dict()
 lr_config = dict(
     policy='poly',
@@ -177,8 +182,8 @@ lr_config = dict(
     warmup_iters=1500,
     warmup_ratio=1e-06)
 runner = dict(type='IterBasedRunner', max_iters=20000)
-checkpoint_config = dict(by_epoch=False, interval=2000)
-evaluation = dict(interval=2000, metric='mIoU')
+checkpoint_config = dict(by_epoch=False, interval=500)
+evaluation = dict(interval=500, metric='mIoU')
 norm_cfg = dict(type='SyncBN', requires_grad=True)
-work_dir = './results/ft_sdc_pin'
+work_dir = './results/ft_sdc_tdfm_pin_only_last_layer'
 gpu_ids = range(0, 1)

@@ -1,0 +1,1600 @@
+2025-05-01 17:44:25,428 - mmseg - INFO - Environment info:
+------------------------------------------------------------
+sys.platform: linux
+Python: 3.8.20 (default, Oct  3 2024, 15:24:27) [GCC 11.2.0]
+CUDA available: True
+GPU 0: NVIDIA RTX A6000
+CUDA_HOME: /usr/local/cuda-11.7
+NVCC: Build cuda_11.7.r11.7/compiler.31442593_0
+GCC: gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
+PyTorch: 1.8.0
+PyTorch compiling details: PyTorch built with:
+  - GCC 7.3
+  - C++ Version: 201402
+  - Intel(R) oneAPI Math Kernel Library Version 2023.1-Product Build 20230303 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v1.7.0 (Git Hash 7aed236906b1f7a05c0917e5257a1af05e9ff683)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.1
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_61,code=sm_61;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_37,code=compute_37
+  - CuDNN 8.0.5
+  - Magma 2.5.2
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.1, CUDNN_VERSION=8.0.5, CXX_COMPILER=/opt/rh/devtoolset-7/root/usr/bin/c++, CXX_FLAGS= -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -fopenmp -DNDEBUG -DUSE_KINETO -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.8.0, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, 
+
+TorchVision: 0.9.0
+OpenCV: 4.11.0
+MMCV: 1.3.17
+MMCV Compiler: GCC 7.3
+MMCV CUDA Compiler: 11.1
+MMSegmentation: 0.19.0+47e3f65
+------------------------------------------------------------
+
+2025-05-01 17:44:25,428 - mmseg - INFO - Distributed training: False
+2025-05-01 17:44:25,546 - mmseg - INFO - Config:
+dataset_type = 'PartImageNet'
+data_root = '/home/noah00001/Desktop/dataset/PartImageNet'
+IMG_MEAN = [122.7709383, 116.7460125, 104.09373615000001]
+IMG_VAR = [68.5005327, 66.6321579, 70.32316304999999]
+img_norm_cfg = dict(
+    mean=[122.7709383, 116.7460125, 104.09373615000001],
+    std=[68.5005327, 66.6321579, 70.32316304999999],
+    to_rgb=True)
+crop_size = (640, 640)
+model = dict(
+    identity_head=dict(
+        type='IdentityHead',
+        in_channels=1,
+        channels=1,
+        num_classes=1,
+        dropout_ratio=0.1,
+        align_corners=False,
+        loss_decode=dict(
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4)),
+    type='SimpleDenseCLIP',
+    context_length=77,
+    text_head=False,
+    text_dim=512,
+    score_concat_index=2,
+    backbone=dict(
+        type='CLIPVisionTransformer',
+        pretrained='pretrained/ViT-B-16.pt',
+        patch_size=16,
+        width=768,
+        output_dim=512,
+        get_embeddings=True,
+        drop_path_rate=0.1,
+        layers=12,
+        input_resolution=640,
+        dense=False,
+        style='pytorch'),
+    text_encoder=dict(
+        type='CLIPTextEncoder',
+        pretrained='pretrained/ViT-B-16.pt',
+        context_length=77,
+        embed_dim=512,
+        transformer_width=512,
+        transformer_heads=8,
+        transformer_layers=12,
+        style='pytorch'),
+    train_cfg=dict(),
+    test_cfg=dict(mode='whole'))
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations'),
+    dict(type='Resize', img_scale=(2048, 640), ratio_range=(0.5, 2.0)),
+    dict(type='RandomCrop', crop_size=(640, 640), cat_max_ratio=0.75),
+    dict(type='RandomFlip', prob=0.5),
+    dict(type='PhotoMetricDistortion'),
+    dict(
+        type='Normalize',
+        mean=[122.7709383, 116.7460125, 104.09373615000001],
+        std=[68.5005327, 66.6321579, 70.32316304999999],
+        to_rgb=True),
+    dict(type='Pad', size=(640, 640), pad_val=0, seg_pad_val=255),
+    dict(type='DefaultFormatBundle'),
+    dict(type='Collect', keys=['img', 'gt_semantic_seg'])
+]
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(2048, 640),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(
+                type='Normalize',
+                mean=[122.7709383, 116.7460125, 104.09373615000001],
+                std=[68.5005327, 66.6321579, 70.32316304999999],
+                to_rgb=True),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ])
+]
+data = dict(
+    samples_per_gpu=4,
+    workers_per_gpu=4,
+    train=dict(
+        type='PartImageNet',
+        data_root='/home/noah00001/Desktop/dataset/PartImageNet',
+        img_dir='images/train',
+        ann_dir='annotations/train',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadAnnotations'),
+            dict(type='Resize', img_scale=(2048, 640), ratio_range=(0.5, 2.0)),
+            dict(type='RandomCrop', crop_size=(640, 640), cat_max_ratio=0.75),
+            dict(type='RandomFlip', prob=0.5),
+            dict(type='PhotoMetricDistortion'),
+            dict(
+                type='Normalize',
+                mean=[122.7709383, 116.7460125, 104.09373615000001],
+                std=[68.5005327, 66.6321579, 70.32316304999999],
+                to_rgb=True),
+            dict(type='Pad', size=(640, 640), pad_val=0, seg_pad_val=255),
+            dict(type='DefaultFormatBundle'),
+            dict(type='Collect', keys=['img', 'gt_semantic_seg'])
+        ]),
+    val=dict(
+        type='PartImageNet',
+        data_root='/home/noah00001/Desktop/dataset/PartImageNet',
+        img_dir='images/val',
+        ann_dir='annotations/val',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(2048, 640),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[122.7709383, 116.7460125, 104.09373615000001],
+                        std=[68.5005327, 66.6321579, 70.32316304999999],
+                        to_rgb=True),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]),
+    test=dict(
+        type='PartImageNet',
+        data_root='/home/noah00001/Desktop/dataset/PartImageNet',
+        img_dir='images/test',
+        ann_dir='annotations/test',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(2048, 640),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[122.7709383, 116.7460125, 104.09373615000001],
+                        std=[68.5005327, 66.6321579, 70.32316304999999],
+                        to_rgb=True),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ]))
+log_config = dict(
+    interval=50, hooks=[dict(type='TextLoggerHook', by_epoch=False)])
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+load_from = None
+resume_from = None
+workflow = [('train', 1)]
+cudnn_benchmark = True
+find_unused_parameters = True
+optimizer = dict(
+    type='AdamW',
+    lr=0.0001,
+    weight_decay=0.0001,
+    paramwise_cfg=dict(
+        custom_keys=dict(
+            backbone=dict(lr_mult=0.1),
+            text_encoder=dict(lr_mult=0.0),
+            norm=dict(decay_mult=0.0))))
+optimizer_config = dict()
+lr_config = dict(
+    policy='poly',
+    power=0.9,
+    min_lr=1e-06,
+    by_epoch=False,
+    warmup='linear',
+    warmup_iters=1500,
+    warmup_ratio=1e-06)
+runner = dict(type='IterBasedRunner', max_iters=20000)
+checkpoint_config = dict(by_epoch=False, interval=2000)
+evaluation = dict(interval=2000, metric='mIoU')
+norm_cfg = dict(type='SyncBN', requires_grad=True)
+work_dir = './results/ft_sdc_pin_bg'
+gpu_ids = range(0, 1)
+
+2025-05-01 17:44:25,546 - mmseg - INFO - Set random seed to 11, deterministic: False
+2025-05-01 17:44:25,747 - mmseg - INFO - Loaded 20466 images
+2025-05-01 17:44:27,124 - mmseg - INFO - #Params: 150699008
+2025-05-01 17:44:27,764 - mmseg - INFO - SimpleDenseCLIP(
+  (backbone): CLIPVisionTransformer(
+    (conv1): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16), bias=False)
+    (ln_pre): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    (transformer): Transformer(
+      (resblocks): Sequential(
+        (0): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (1): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.00909090880304575)
+        )
+        (2): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.0181818176060915)
+        )
+        (3): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.027272727340459824)
+        )
+        (4): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.036363635212183)
+        )
+        (5): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.045454543083906174)
+        )
+        (6): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.054545458406209946)
+        )
+        (7): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.06363636255264282)
+        )
+        (8): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.0727272778749466)
+        )
+        (9): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.08181818574666977)
+        )
+        (10): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.09090909361839294)
+        )
+        (11): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=768, out_features=768, bias=True)
+          )
+          (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=768, out_features=3072, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=3072, out_features=768, bias=True)
+          )
+          (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (drop_path): DropPath(p=0.10000000149011612)
+        )
+      )
+    )
+    (ln_post): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+  )
+  (text_encoder): CLIPTextEncoder(
+    (transformer): Transformer(
+      (resblocks): Sequential(
+        (0): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (1): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (2): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (3): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (4): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (5): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (6): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (7): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (8): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (9): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (10): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+        (11): ResidualAttentionBlock(
+          (attn): MultiheadAttention(
+            (out_proj): _LinearWithBias(in_features=512, out_features=512, bias=True)
+          )
+          (ln_1): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (mlp): Sequential(
+            (c_fc): Linear(in_features=512, out_features=2048, bias=True)
+            (gelu): QuickGELU()
+            (c_proj): Linear(in_features=2048, out_features=512, bias=True)
+          )
+          (ln_2): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+          (drop_path): Identity()
+        )
+      )
+    )
+    (token_embedding): Embedding(49408, 512)
+    (ln_final): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+  )
+  (identity_head): IdentityHead(
+    input_transform=None, ignore_index=255, align_corners=False
+    (loss_decode): CrossEntropyLoss()
+    (conv_seg): None
+    (dropout): Dropout2d(p=0.1, inplace=False)
+  )
+  init_cfg={'type': 'Normal', 'std': 0.01, 'override': {'name': 'conv_seg'}}
+)
+2025-05-01 17:44:29,735 - mmseg - INFO - Loaded 1206 images
+2025-05-01 17:44:29,735 - mmseg - INFO - Start running, host: noah00001@buzz, work_dir: /home/noah00001/Desktop/projects/throwaway/DenseCLIP/segmentation/results/ft_sdc_pin_bg
+2025-05-01 17:44:29,735 - mmseg - INFO - Hooks will be executed in the following order:
+before_run:
+(VERY_HIGH   ) PolyLrUpdaterHook                  
+(NORMAL      ) CheckpointHook                     
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_train_epoch:
+(VERY_HIGH   ) PolyLrUpdaterHook                  
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_train_iter:
+(VERY_HIGH   ) PolyLrUpdaterHook                  
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+ -------------------- 
+after_train_iter:
+(ABOVE_NORMAL) OptimizerHook                      
+(NORMAL      ) CheckpointHook                     
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+after_train_epoch:
+(NORMAL      ) CheckpointHook                     
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_val_epoch:
+(LOW         ) IterTimerHook                      
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_val_iter:
+(LOW         ) IterTimerHook                      
+ -------------------- 
+after_val_iter:
+(LOW         ) IterTimerHook                      
+ -------------------- 
+after_val_epoch:
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+after_run:
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+2025-05-01 17:44:29,736 - mmseg - INFO - workflow: [('train', 1)], max: 20000 iters
+2025-05-01 17:44:29,736 - mmseg - INFO - Checkpoints will be saved to /home/noah00001/Desktop/projects/throwaway/DenseCLIP/segmentation/results/ft_sdc_pin_bg by HardDiskBackend.
+2025-05-01 17:45:00,278 - mmseg - INFO - Iter [50/20000]	lr: 3.260e-07, eta: 3:22:00, time: 0.608, data_time: 0.010, memory: 22331, aux_identity.loss_ce: 1.2518, aux_identity.acc_seg: 23.4147, loss: 1.2518
+2025-05-01 17:45:29,429 - mmseg - INFO - Iter [100/20000]	lr: 6.574e-07, eta: 3:17:26, time: 0.583, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 1.0726, aux_identity.acc_seg: 56.1649, loss: 1.0726
+2025-05-01 17:45:58,684 - mmseg - INFO - Iter [150/20000]	lr: 9.873e-07, eta: 3:15:48, time: 0.585, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.7594, aux_identity.acc_seg: 55.0654, loss: 0.7594
+2025-05-01 17:46:28,116 - mmseg - INFO - Iter [200/20000]	lr: 1.316e-06, eta: 3:15:03, time: 0.589, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.5647, aux_identity.acc_seg: 56.0328, loss: 0.5647
+2025-05-01 17:46:57,627 - mmseg - INFO - Iter [250/20000]	lr: 1.643e-06, eta: 3:14:30, time: 0.590, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.4981, aux_identity.acc_seg: 60.7564, loss: 0.4981
+2025-05-01 17:47:27,292 - mmseg - INFO - Iter [300/20000]	lr: 1.969e-06, eta: 3:14:08, time: 0.593, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.4741, aux_identity.acc_seg: 61.6155, loss: 0.4741
+2025-05-01 17:47:56,497 - mmseg - INFO - Iter [350/20000]	lr: 2.294e-06, eta: 3:13:18, time: 0.584, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.4280, aux_identity.acc_seg: 65.5250, loss: 0.4280
+2025-05-01 17:48:25,761 - mmseg - INFO - Iter [400/20000]	lr: 2.617e-06, eta: 3:12:37, time: 0.585, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.3925, aux_identity.acc_seg: 65.6211, loss: 0.3925
+2025-05-01 17:48:54,878 - mmseg - INFO - Iter [450/20000]	lr: 2.939e-06, eta: 3:11:51, time: 0.582, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.4118, aux_identity.acc_seg: 63.3403, loss: 0.4118
+2025-05-01 17:49:24,032 - mmseg - INFO - Iter [500/20000]	lr: 3.259e-06, eta: 3:11:11, time: 0.583, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.3438, aux_identity.acc_seg: 69.4942, loss: 0.3438
+2025-05-01 17:49:53,236 - mmseg - INFO - Iter [550/20000]	lr: 3.579e-06, eta: 3:10:34, time: 0.584, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.3763, aux_identity.acc_seg: 67.5166, loss: 0.3763
+2025-05-01 17:50:22,422 - mmseg - INFO - Iter [600/20000]	lr: 3.896e-06, eta: 3:09:58, time: 0.584, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.3707, aux_identity.acc_seg: 69.7150, loss: 0.3707
+2025-05-01 17:50:51,659 - mmseg - INFO - Iter [650/20000]	lr: 4.213e-06, eta: 3:09:24, time: 0.585, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.2920, aux_identity.acc_seg: 67.6372, loss: 0.2920
+2025-05-01 17:51:20,829 - mmseg - INFO - Iter [700/20000]	lr: 4.528e-06, eta: 3:08:49, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.3216, aux_identity.acc_seg: 68.5560, loss: 0.3216
+2025-05-01 17:51:49,961 - mmseg - INFO - Iter [750/20000]	lr: 4.842e-06, eta: 3:08:14, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.3035, aux_identity.acc_seg: 70.8333, loss: 0.3035
+2025-05-01 17:52:19,236 - mmseg - INFO - Iter [800/20000]	lr: 5.154e-06, eta: 3:07:43, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.3029, aux_identity.acc_seg: 70.5645, loss: 0.3029
+2025-05-01 17:52:48,520 - mmseg - INFO - Iter [850/20000]	lr: 5.465e-06, eta: 3:07:13, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2914, aux_identity.acc_seg: 71.3168, loss: 0.2914
+2025-05-01 17:53:17,665 - mmseg - INFO - Iter [900/20000]	lr: 5.775e-06, eta: 3:06:40, time: 0.583, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.3273, aux_identity.acc_seg: 68.3948, loss: 0.3273
+2025-05-01 17:53:46,867 - mmseg - INFO - Iter [950/20000]	lr: 6.083e-06, eta: 3:06:08, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2671, aux_identity.acc_seg: 72.0578, loss: 0.2671
+2025-05-01 17:54:16,046 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 17:54:16,046 - mmseg - INFO - Iter [1000/20000]	lr: 6.390e-06, eta: 3:05:36, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2957, aux_identity.acc_seg: 69.2041, loss: 0.2957
+2025-05-01 17:54:45,287 - mmseg - INFO - Iter [1050/20000]	lr: 6.695e-06, eta: 3:05:06, time: 0.585, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.2744, aux_identity.acc_seg: 71.1059, loss: 0.2744
+2025-05-01 17:55:14,421 - mmseg - INFO - Iter [1100/20000]	lr: 7.000e-06, eta: 3:04:33, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2740, aux_identity.acc_seg: 71.6142, loss: 0.2740
+2025-05-01 17:55:43,597 - mmseg - INFO - Iter [1150/20000]	lr: 7.303e-06, eta: 3:04:02, time: 0.584, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.2792, aux_identity.acc_seg: 73.5013, loss: 0.2792
+2025-05-01 17:56:12,801 - mmseg - INFO - Iter [1200/20000]	lr: 7.604e-06, eta: 3:03:31, time: 0.584, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.2709, aux_identity.acc_seg: 73.4877, loss: 0.2709
+2025-05-01 17:56:42,674 - mmseg - INFO - Iter [1250/20000]	lr: 7.904e-06, eta: 3:03:11, time: 0.597, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.2814, aux_identity.acc_seg: 72.2723, loss: 0.2814
+2025-05-01 17:57:11,765 - mmseg - INFO - Iter [1300/20000]	lr: 8.203e-06, eta: 3:02:39, time: 0.582, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.2927, aux_identity.acc_seg: 67.2474, loss: 0.2927
+2025-05-01 17:57:40,976 - mmseg - INFO - Iter [1350/20000]	lr: 8.500e-06, eta: 3:02:08, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2603, aux_identity.acc_seg: 71.8055, loss: 0.2603
+2025-05-01 17:58:10,165 - mmseg - INFO - Iter [1400/20000]	lr: 8.796e-06, eta: 3:01:37, time: 0.584, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.3318, aux_identity.acc_seg: 70.4525, loss: 0.3318
+2025-05-01 17:58:39,332 - mmseg - INFO - Iter [1450/20000]	lr: 9.091e-06, eta: 3:01:06, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2872, aux_identity.acc_seg: 70.1970, loss: 0.2872
+2025-05-01 17:59:08,496 - mmseg - INFO - Iter [1500/20000]	lr: 9.384e-06, eta: 3:00:35, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2291, aux_identity.acc_seg: 73.8435, loss: 0.2291
+2025-05-01 17:59:37,713 - mmseg - INFO - Iter [1550/20000]	lr: 9.370e-06, eta: 3:00:05, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2478, aux_identity.acc_seg: 72.4342, loss: 0.2478
+2025-05-01 18:00:06,858 - mmseg - INFO - Iter [1600/20000]	lr: 9.350e-06, eta: 2:59:34, time: 0.583, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.2732, aux_identity.acc_seg: 69.9105, loss: 0.2732
+2025-05-01 18:00:36,093 - mmseg - INFO - Iter [1650/20000]	lr: 9.329e-06, eta: 2:59:05, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2332, aux_identity.acc_seg: 73.2102, loss: 0.2332
+2025-05-01 18:01:05,202 - mmseg - INFO - Iter [1700/20000]	lr: 9.309e-06, eta: 2:58:34, time: 0.582, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.2119, aux_identity.acc_seg: 74.6399, loss: 0.2119
+2025-05-01 18:01:34,447 - mmseg - INFO - Iter [1750/20000]	lr: 9.288e-06, eta: 2:58:04, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2136, aux_identity.acc_seg: 75.3367, loss: 0.2136
+2025-05-01 18:02:03,669 - mmseg - INFO - Iter [1800/20000]	lr: 9.268e-06, eta: 2:57:34, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2546, aux_identity.acc_seg: 71.0044, loss: 0.2546
+2025-05-01 18:02:32,984 - mmseg - INFO - Iter [1850/20000]	lr: 9.248e-06, eta: 2:57:05, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2295, aux_identity.acc_seg: 71.8621, loss: 0.2295
+2025-05-01 18:03:02,226 - mmseg - INFO - Iter [1900/20000]	lr: 9.227e-06, eta: 2:56:36, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2175, aux_identity.acc_seg: 73.9577, loss: 0.2175
+2025-05-01 18:03:31,451 - mmseg - INFO - Iter [1950/20000]	lr: 9.207e-06, eta: 2:56:06, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1942, aux_identity.acc_seg: 74.3996, loss: 0.1942
+2025-05-01 18:04:00,560 - mmseg - INFO - Saving checkpoint at 2000 iterations
+2025-05-01 18:04:04,022 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 18:04:04,023 - mmseg - INFO - Iter [2000/20000]	lr: 9.186e-06, eta: 2:56:07, time: 0.652, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2298, aux_identity.acc_seg: 74.5162, loss: 0.2298
+2025-05-01 18:05:42,497 - mmseg - INFO - per class results:
+2025-05-01 18:05:42,499 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|  Quadruped Head  | 70.36 | 86.22 |
+|  Quadruped Body  | 60.28 | 79.16 |
+|  Quadruped Foot  | 43.81 | 59.89 |
+|  Quadruped Tail  |  0.0  |  0.0  |
+|    Biped Head    | 52.72 | 62.01 |
+|    Biped Body    |  39.9 | 66.47 |
+|    Biped Hand    | 16.11 | 23.03 |
+|    Biped Foot    |  9.35 |  10.5 |
+|    Biped Tail    |  0.0  |  0.0  |
+|    Fish Head     | 28.04 | 36.95 |
+|    Fish Body     | 41.14 | 67.81 |
+|     Fish Fin     |  4.49 |  4.56 |
+|    Fish Tail     |  0.0  |  0.0  |
+|    Bird Head     |  59.2 | 79.18 |
+|    Bird Body     | 53.75 | 80.94 |
+|    Bird Wing     | 43.82 | 59.73 |
+|    Bird Foot     | 23.97 | 34.64 |
+|    Bird Tail     |  0.0  |  0.0  |
+|    Snake Head    | 35.74 | 64.43 |
+|    Snake Body    | 60.12 | 82.52 |
+|   Reptile Head   | 39.35 | 79.16 |
+|   Reptile Body   | 46.16 | 57.58 |
+|   Reptile Foot   | 22.33 | 28.72 |
+|   Reptile Tail   |  0.0  |  0.0  |
+|     Car Body     | 86.32 | 92.39 |
+|     Car Tire     | 60.54 | 86.98 |
+| Car Side Mirror  |  0.0  |  0.0  |
+|   Bicycle Body   |  5.79 |  6.2  |
+|   Bicycle Head   |  0.0  |  0.0  |
+|   Bicycle Seat   |  0.0  |  0.0  |
+|   Bicycle Tire   | 50.19 | 86.85 |
+|    Boat Body     | 55.23 | 64.69 |
+|    Boat Sail     | 76.83 | 89.01 |
+|  Aeroplane Head  |  6.2  |  6.55 |
+|  Aeroplane Body  | 44.47 | 87.73 |
+| Aeroplane Engine |  0.0  |  0.0  |
+|  Aeroplane Wing  |  0.0  |  0.0  |
+|  Aeroplane Tail  |  0.0  |  0.0  |
+|   Bottle Mouth   |  9.37 |  9.44 |
+|   Bottle Body    | 57.41 | 98.94 |
+|    Background    | 94.82 | 96.62 |
++------------------+-------+-------+
+2025-05-01 18:05:42,499 - mmseg - INFO - Summary:
+2025-05-01 18:05:42,499 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 90.55 | 31.65 | 43.63 |
++-------+-------+-------+
+2025-05-01 18:05:42,511 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 18:05:42,511 - mmseg - INFO - Iter(val) [1206]	aAcc: 0.9055, mIoU: 0.3165, mAcc: 0.4363, IoU.Quadruped Head: 0.7036, IoU.Quadruped Body: 0.6028, IoU.Quadruped Foot: 0.4381, IoU.Quadruped Tail: 0.0000, IoU.Biped Head: 0.5272, IoU.Biped Body: 0.3990, IoU.Biped Hand: 0.1611, IoU.Biped Foot: 0.0935, IoU.Biped Tail: 0.0000, IoU.Fish Head: 0.2804, IoU.Fish Body: 0.4114, IoU.Fish Fin: 0.0449, IoU.Fish Tail: 0.0000, IoU.Bird Head: 0.5920, IoU.Bird Body: 0.5375, IoU.Bird Wing: 0.4382, IoU.Bird Foot: 0.2397, IoU.Bird Tail: 0.0000, IoU.Snake Head: 0.3574, IoU.Snake Body: 0.6012, IoU.Reptile Head: 0.3935, IoU.Reptile Body: 0.4616, IoU.Reptile Foot: 0.2233, IoU.Reptile Tail: 0.0000, IoU.Car Body: 0.8632, IoU.Car Tire: 0.6054, IoU.Car Side Mirror: 0.0000, IoU.Bicycle Body: 0.0579, IoU.Bicycle Head: 0.0000, IoU.Bicycle Seat: 0.0000, IoU.Bicycle Tire: 0.5019, IoU.Boat Body: 0.5523, IoU.Boat Sail: 0.7683, IoU.Aeroplane Head: 0.0620, IoU.Aeroplane Body: 0.4447, IoU.Aeroplane Engine: 0.0000, IoU.Aeroplane Wing: 0.0000, IoU.Aeroplane Tail: 0.0000, IoU.Bottle Mouth: 0.0937, IoU.Bottle Body: 0.5741, IoU.Background: 0.9482, Acc.Quadruped Head: 0.8622, Acc.Quadruped Body: 0.7916, Acc.Quadruped Foot: 0.5989, Acc.Quadruped Tail: 0.0000, Acc.Biped Head: 0.6201, Acc.Biped Body: 0.6647, Acc.Biped Hand: 0.2303, Acc.Biped Foot: 0.1050, Acc.Biped Tail: 0.0000, Acc.Fish Head: 0.3695, Acc.Fish Body: 0.6781, Acc.Fish Fin: 0.0456, Acc.Fish Tail: 0.0000, Acc.Bird Head: 0.7918, Acc.Bird Body: 0.8094, Acc.Bird Wing: 0.5973, Acc.Bird Foot: 0.3464, Acc.Bird Tail: 0.0000, Acc.Snake Head: 0.6443, Acc.Snake Body: 0.8252, Acc.Reptile Head: 0.7916, Acc.Reptile Body: 0.5758, Acc.Reptile Foot: 0.2872, Acc.Reptile Tail: 0.0000, Acc.Car Body: 0.9239, Acc.Car Tire: 0.8698, Acc.Car Side Mirror: 0.0000, Acc.Bicycle Body: 0.0620, Acc.Bicycle Head: 0.0000, Acc.Bicycle Seat: 0.0000, Acc.Bicycle Tire: 0.8685, Acc.Boat Body: 0.6469, Acc.Boat Sail: 0.8901, Acc.Aeroplane Head: 0.0655, Acc.Aeroplane Body: 0.8773, Acc.Aeroplane Engine: 0.0000, Acc.Aeroplane Wing: 0.0000, Acc.Aeroplane Tail: 0.0000, Acc.Bottle Mouth: 0.0944, Acc.Bottle Body: 0.9894, Acc.Background: 0.9662
+2025-05-01 18:06:11,596 - mmseg - INFO - Iter [2050/20000]	lr: 9.166e-06, eta: 3:09:57, time: 2.551, data_time: 1.976, memory: 22331, aux_identity.loss_ce: 0.2181, aux_identity.acc_seg: 73.3899, loss: 0.2181
+2025-05-01 18:06:40,728 - mmseg - INFO - Iter [2100/20000]	lr: 9.145e-06, eta: 3:09:03, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2211, aux_identity.acc_seg: 75.1521, loss: 0.2211
+2025-05-01 18:07:10,570 - mmseg - INFO - Iter [2150/20000]	lr: 9.125e-06, eta: 3:08:16, time: 0.597, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2471, aux_identity.acc_seg: 70.9057, loss: 0.2471
+2025-05-01 18:07:39,702 - mmseg - INFO - Iter [2200/20000]	lr: 9.104e-06, eta: 3:07:24, time: 0.583, data_time: 0.006, memory: 22331, aux_identity.loss_ce: 0.1998, aux_identity.acc_seg: 74.6567, loss: 0.1998
+2025-05-01 18:08:08,930 - mmseg - INFO - Iter [2250/20000]	lr: 9.084e-06, eta: 3:06:34, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1816, aux_identity.acc_seg: 75.8719, loss: 0.1816
+2025-05-01 18:08:38,154 - mmseg - INFO - Iter [2300/20000]	lr: 9.063e-06, eta: 3:05:45, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2748, aux_identity.acc_seg: 73.7847, loss: 0.2748
+2025-05-01 18:09:07,346 - mmseg - INFO - Iter [2350/20000]	lr: 9.043e-06, eta: 3:04:56, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2179, aux_identity.acc_seg: 73.0801, loss: 0.2179
+2025-05-01 18:09:36,670 - mmseg - INFO - Iter [2400/20000]	lr: 9.022e-06, eta: 3:04:09, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2205, aux_identity.acc_seg: 75.8535, loss: 0.2205
+2025-05-01 18:10:05,908 - mmseg - INFO - Iter [2450/20000]	lr: 9.002e-06, eta: 3:03:22, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1817, aux_identity.acc_seg: 77.6332, loss: 0.1817
+2025-05-01 18:10:35,259 - mmseg - INFO - Iter [2500/20000]	lr: 8.981e-06, eta: 3:02:37, time: 0.587, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1987, aux_identity.acc_seg: 73.1815, loss: 0.1987
+2025-05-01 18:11:04,451 - mmseg - INFO - Iter [2550/20000]	lr: 8.961e-06, eta: 3:01:51, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1829, aux_identity.acc_seg: 77.5228, loss: 0.1829
+2025-05-01 18:11:33,677 - mmseg - INFO - Iter [2600/20000]	lr: 8.940e-06, eta: 3:01:06, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2041, aux_identity.acc_seg: 75.9311, loss: 0.2041
+2025-05-01 18:12:02,815 - mmseg - INFO - Iter [2650/20000]	lr: 8.920e-06, eta: 3:00:21, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2047, aux_identity.acc_seg: 74.3191, loss: 0.2047
+2025-05-01 18:12:32,052 - mmseg - INFO - Iter [2700/20000]	lr: 8.899e-06, eta: 2:59:38, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2184, aux_identity.acc_seg: 73.7075, loss: 0.2184
+2025-05-01 18:13:01,275 - mmseg - INFO - Iter [2750/20000]	lr: 8.879e-06, eta: 2:58:54, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2117, aux_identity.acc_seg: 72.6150, loss: 0.2117
+2025-05-01 18:13:30,506 - mmseg - INFO - Iter [2800/20000]	lr: 8.858e-06, eta: 2:58:12, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2255, aux_identity.acc_seg: 72.8291, loss: 0.2255
+2025-05-01 18:13:59,727 - mmseg - INFO - Iter [2850/20000]	lr: 8.837e-06, eta: 2:57:29, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2219, aux_identity.acc_seg: 73.7356, loss: 0.2219
+2025-05-01 18:14:28,820 - mmseg - INFO - Iter [2900/20000]	lr: 8.817e-06, eta: 2:56:47, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2098, aux_identity.acc_seg: 73.9214, loss: 0.2098
+2025-05-01 18:14:57,972 - mmseg - INFO - Iter [2950/20000]	lr: 8.796e-06, eta: 2:56:05, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2066, aux_identity.acc_seg: 74.3047, loss: 0.2066
+2025-05-01 18:15:27,167 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 18:15:27,167 - mmseg - INFO - Iter [3000/20000]	lr: 8.776e-06, eta: 2:55:24, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1932, aux_identity.acc_seg: 75.5696, loss: 0.1932
+2025-05-01 18:15:56,421 - mmseg - INFO - Iter [3050/20000]	lr: 8.755e-06, eta: 2:54:43, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1876, aux_identity.acc_seg: 74.9252, loss: 0.1876
+2025-05-01 18:16:25,611 - mmseg - INFO - Iter [3100/20000]	lr: 8.735e-06, eta: 2:54:03, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2193, aux_identity.acc_seg: 73.4870, loss: 0.2193
+2025-05-01 18:16:54,801 - mmseg - INFO - Iter [3150/20000]	lr: 8.714e-06, eta: 2:53:23, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1779, aux_identity.acc_seg: 75.8370, loss: 0.1779
+2025-05-01 18:17:24,751 - mmseg - INFO - Iter [3200/20000]	lr: 8.693e-06, eta: 2:52:47, time: 0.599, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2004, aux_identity.acc_seg: 73.2592, loss: 0.2004
+2025-05-01 18:17:53,922 - mmseg - INFO - Iter [3250/20000]	lr: 8.673e-06, eta: 2:52:08, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2342, aux_identity.acc_seg: 73.5575, loss: 0.2342
+2025-05-01 18:18:23,091 - mmseg - INFO - Iter [3300/20000]	lr: 8.652e-06, eta: 2:51:29, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1882, aux_identity.acc_seg: 75.7089, loss: 0.1882
+2025-05-01 18:18:52,301 - mmseg - INFO - Iter [3350/20000]	lr: 8.632e-06, eta: 2:50:50, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1802, aux_identity.acc_seg: 73.7743, loss: 0.1802
+2025-05-01 18:19:21,450 - mmseg - INFO - Iter [3400/20000]	lr: 8.611e-06, eta: 2:50:11, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1685, aux_identity.acc_seg: 75.4242, loss: 0.1685
+2025-05-01 18:19:50,557 - mmseg - INFO - Iter [3450/20000]	lr: 8.590e-06, eta: 2:49:32, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1483, aux_identity.acc_seg: 76.1315, loss: 0.1483
+2025-05-01 18:20:19,706 - mmseg - INFO - Iter [3500/20000]	lr: 8.570e-06, eta: 2:48:54, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1841, aux_identity.acc_seg: 75.7582, loss: 0.1841
+2025-05-01 18:20:48,898 - mmseg - INFO - Iter [3550/20000]	lr: 8.549e-06, eta: 2:48:16, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2223, aux_identity.acc_seg: 73.4790, loss: 0.2223
+2025-05-01 18:21:18,070 - mmseg - INFO - Iter [3600/20000]	lr: 8.528e-06, eta: 2:47:39, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2008, aux_identity.acc_seg: 74.2237, loss: 0.2008
+2025-05-01 18:21:47,244 - mmseg - INFO - Iter [3650/20000]	lr: 8.508e-06, eta: 2:47:01, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1944, aux_identity.acc_seg: 73.3502, loss: 0.1944
+2025-05-01 18:22:16,408 - mmseg - INFO - Iter [3700/20000]	lr: 8.487e-06, eta: 2:46:24, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1761, aux_identity.acc_seg: 75.0004, loss: 0.1761
+2025-05-01 18:22:45,677 - mmseg - INFO - Iter [3750/20000]	lr: 8.466e-06, eta: 2:45:48, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1880, aux_identity.acc_seg: 75.7545, loss: 0.1880
+2025-05-01 18:23:14,863 - mmseg - INFO - Iter [3800/20000]	lr: 8.446e-06, eta: 2:45:11, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2032, aux_identity.acc_seg: 74.5555, loss: 0.2032
+2025-05-01 18:23:44,036 - mmseg - INFO - Iter [3850/20000]	lr: 8.425e-06, eta: 2:44:35, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1815, aux_identity.acc_seg: 71.6897, loss: 0.1815
+2025-05-01 18:24:13,253 - mmseg - INFO - Iter [3900/20000]	lr: 8.404e-06, eta: 2:43:58, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1944, aux_identity.acc_seg: 74.1523, loss: 0.1944
+2025-05-01 18:24:42,459 - mmseg - INFO - Iter [3950/20000]	lr: 8.384e-06, eta: 2:43:22, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1907, aux_identity.acc_seg: 76.7456, loss: 0.1907
+2025-05-01 18:25:11,624 - mmseg - INFO - Saving checkpoint at 4000 iterations
+2025-05-01 18:25:14,565 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 18:25:14,566 - mmseg - INFO - Iter [4000/20000]	lr: 8.363e-06, eta: 2:42:58, time: 0.642, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1764, aux_identity.acc_seg: 72.9062, loss: 0.1764
+2025-05-01 18:26:45,042 - mmseg - INFO - per class results:
+2025-05-01 18:26:45,044 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|  Quadruped Head  | 73.13 | 88.56 |
+|  Quadruped Body  | 58.82 | 84.21 |
+|  Quadruped Foot  |  38.7 | 49.59 |
+|  Quadruped Tail  | 34.41 | 37.49 |
+|    Biped Head    | 52.23 | 59.51 |
+|    Biped Body    | 29.84 | 38.11 |
+|    Biped Hand    |  14.1 | 16.16 |
+|    Biped Foot    | 13.74 | 16.41 |
+|    Biped Tail    |  1.06 |  1.07 |
+|    Fish Head     |  53.5 | 65.72 |
+|    Fish Body     | 51.86 | 84.58 |
+|     Fish Fin     | 26.78 | 44.92 |
+|    Fish Tail     |  0.49 |  0.5  |
+|    Bird Head     | 58.77 | 81.25 |
+|    Bird Body     | 54.74 | 89.24 |
+|    Bird Wing     |  43.0 | 68.06 |
+|    Bird Foot     | 29.13 | 43.48 |
+|    Bird Tail     | 19.04 | 23.24 |
+|    Snake Head    | 48.79 | 53.52 |
+|    Snake Body    | 69.82 | 77.69 |
+|   Reptile Head   |  56.0 | 66.99 |
+|   Reptile Body   | 56.57 |  82.6 |
+|   Reptile Foot   |  28.0 |  32.7 |
+|   Reptile Tail   |  9.33 | 11.41 |
+|     Car Body     |  84.3 | 97.69 |
+|     Car Tire     | 67.41 | 80.11 |
+| Car Side Mirror  |  0.0  |  0.0  |
+|   Bicycle Body   | 31.57 |  46.9 |
+|   Bicycle Head   |  0.0  |  0.0  |
+|   Bicycle Seat   |  0.0  |  0.0  |
+|   Bicycle Tire   | 64.61 | 75.97 |
+|    Boat Body     | 50.81 |  95.1 |
+|    Boat Sail     | 84.61 | 93.64 |
+|  Aeroplane Head  |  0.0  |  0.0  |
+|  Aeroplane Body  | 36.83 | 85.63 |
+| Aeroplane Engine |  0.0  |  0.0  |
+|  Aeroplane Wing  | 35.89 | 40.11 |
+|  Aeroplane Tail  |  0.0  |  0.0  |
+|   Bottle Mouth   |  8.59 | 11.08 |
+|   Bottle Body    | 69.67 | 93.66 |
+|    Background    | 94.99 | 97.09 |
++------------------+-------+-------+
+2025-05-01 18:26:45,044 - mmseg - INFO - Summary:
+2025-05-01 18:26:45,045 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 91.64 | 37.83 | 49.61 |
++-------+-------+-------+
+2025-05-01 18:26:45,046 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 18:26:45,046 - mmseg - INFO - Iter(val) [1206]	aAcc: 0.9164, mIoU: 0.3783, mAcc: 0.4961, IoU.Quadruped Head: 0.7313, IoU.Quadruped Body: 0.5882, IoU.Quadruped Foot: 0.3870, IoU.Quadruped Tail: 0.3441, IoU.Biped Head: 0.5223, IoU.Biped Body: 0.2984, IoU.Biped Hand: 0.1410, IoU.Biped Foot: 0.1374, IoU.Biped Tail: 0.0106, IoU.Fish Head: 0.5350, IoU.Fish Body: 0.5186, IoU.Fish Fin: 0.2678, IoU.Fish Tail: 0.0049, IoU.Bird Head: 0.5877, IoU.Bird Body: 0.5474, IoU.Bird Wing: 0.4300, IoU.Bird Foot: 0.2913, IoU.Bird Tail: 0.1904, IoU.Snake Head: 0.4879, IoU.Snake Body: 0.6982, IoU.Reptile Head: 0.5600, IoU.Reptile Body: 0.5657, IoU.Reptile Foot: 0.2800, IoU.Reptile Tail: 0.0933, IoU.Car Body: 0.8430, IoU.Car Tire: 0.6741, IoU.Car Side Mirror: 0.0000, IoU.Bicycle Body: 0.3157, IoU.Bicycle Head: 0.0000, IoU.Bicycle Seat: 0.0000, IoU.Bicycle Tire: 0.6461, IoU.Boat Body: 0.5081, IoU.Boat Sail: 0.8461, IoU.Aeroplane Head: 0.0000, IoU.Aeroplane Body: 0.3683, IoU.Aeroplane Engine: 0.0000, IoU.Aeroplane Wing: 0.3589, IoU.Aeroplane Tail: 0.0000, IoU.Bottle Mouth: 0.0859, IoU.Bottle Body: 0.6967, IoU.Background: 0.9499, Acc.Quadruped Head: 0.8856, Acc.Quadruped Body: 0.8421, Acc.Quadruped Foot: 0.4959, Acc.Quadruped Tail: 0.3749, Acc.Biped Head: 0.5951, Acc.Biped Body: 0.3811, Acc.Biped Hand: 0.1616, Acc.Biped Foot: 0.1641, Acc.Biped Tail: 0.0107, Acc.Fish Head: 0.6572, Acc.Fish Body: 0.8458, Acc.Fish Fin: 0.4492, Acc.Fish Tail: 0.0050, Acc.Bird Head: 0.8125, Acc.Bird Body: 0.8924, Acc.Bird Wing: 0.6806, Acc.Bird Foot: 0.4348, Acc.Bird Tail: 0.2324, Acc.Snake Head: 0.5352, Acc.Snake Body: 0.7769, Acc.Reptile Head: 0.6699, Acc.Reptile Body: 0.8260, Acc.Reptile Foot: 0.3270, Acc.Reptile Tail: 0.1141, Acc.Car Body: 0.9769, Acc.Car Tire: 0.8011, Acc.Car Side Mirror: 0.0000, Acc.Bicycle Body: 0.4690, Acc.Bicycle Head: 0.0000, Acc.Bicycle Seat: 0.0000, Acc.Bicycle Tire: 0.7597, Acc.Boat Body: 0.9510, Acc.Boat Sail: 0.9364, Acc.Aeroplane Head: 0.0000, Acc.Aeroplane Body: 0.8563, Acc.Aeroplane Engine: 0.0000, Acc.Aeroplane Wing: 0.4011, Acc.Aeroplane Tail: 0.0000, Acc.Bottle Mouth: 0.1108, Acc.Bottle Body: 0.9366, Acc.Background: 0.9709
+2025-05-01 18:27:14,198 - mmseg - INFO - Iter [4050/20000]	lr: 8.342e-06, eta: 2:48:18, time: 2.393, data_time: 1.816, memory: 22331, aux_identity.loss_ce: 0.2149, aux_identity.acc_seg: 73.0374, loss: 0.2149
+2025-05-01 18:27:44,022 - mmseg - INFO - Iter [4100/20000]	lr: 8.321e-06, eta: 2:47:40, time: 0.596, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2069, aux_identity.acc_seg: 75.1042, loss: 0.2069
+2025-05-01 18:28:13,212 - mmseg - INFO - Iter [4150/20000]	lr: 8.301e-06, eta: 2:46:59, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1874, aux_identity.acc_seg: 76.4763, loss: 0.1874
+2025-05-01 18:28:42,389 - mmseg - INFO - Iter [4200/20000]	lr: 8.280e-06, eta: 2:46:18, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1514, aux_identity.acc_seg: 76.4206, loss: 0.1514
+2025-05-01 18:29:11,519 - mmseg - INFO - Iter [4250/20000]	lr: 8.259e-06, eta: 2:45:37, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1735, aux_identity.acc_seg: 76.1020, loss: 0.1735
+2025-05-01 18:29:40,753 - mmseg - INFO - Iter [4300/20000]	lr: 8.239e-06, eta: 2:44:57, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1661, aux_identity.acc_seg: 77.2067, loss: 0.1661
+2025-05-01 18:30:09,912 - mmseg - INFO - Iter [4350/20000]	lr: 8.218e-06, eta: 2:44:17, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1857, aux_identity.acc_seg: 75.6095, loss: 0.1857
+2025-05-01 18:30:39,121 - mmseg - INFO - Iter [4400/20000]	lr: 8.197e-06, eta: 2:43:38, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1715, aux_identity.acc_seg: 77.9343, loss: 0.1715
+2025-05-01 18:31:08,433 - mmseg - INFO - Iter [4450/20000]	lr: 8.176e-06, eta: 2:42:59, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2002, aux_identity.acc_seg: 75.8386, loss: 0.2002
+2025-05-01 18:31:37,633 - mmseg - INFO - Iter [4500/20000]	lr: 8.155e-06, eta: 2:42:19, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1642, aux_identity.acc_seg: 76.2629, loss: 0.1642
+2025-05-01 18:32:06,802 - mmseg - INFO - Iter [4550/20000]	lr: 8.135e-06, eta: 2:41:40, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1557, aux_identity.acc_seg: 78.0397, loss: 0.1557
+2025-05-01 18:32:36,076 - mmseg - INFO - Iter [4600/20000]	lr: 8.114e-06, eta: 2:41:02, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2111, aux_identity.acc_seg: 75.3167, loss: 0.2111
+2025-05-01 18:33:05,344 - mmseg - INFO - Iter [4650/20000]	lr: 8.093e-06, eta: 2:40:23, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1912, aux_identity.acc_seg: 77.2851, loss: 0.1912
+2025-05-01 18:33:34,609 - mmseg - INFO - Iter [4700/20000]	lr: 8.072e-06, eta: 2:39:45, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.2047, aux_identity.acc_seg: 76.6652, loss: 0.2047
+2025-05-01 18:34:03,815 - mmseg - INFO - Iter [4750/20000]	lr: 8.052e-06, eta: 2:39:07, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1710, aux_identity.acc_seg: 75.2738, loss: 0.1710
+2025-05-01 18:34:33,080 - mmseg - INFO - Iter [4800/20000]	lr: 8.031e-06, eta: 2:38:29, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1781, aux_identity.acc_seg: 76.4825, loss: 0.1781
+2025-05-01 18:35:02,362 - mmseg - INFO - Iter [4850/20000]	lr: 8.010e-06, eta: 2:37:52, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1725, aux_identity.acc_seg: 75.7424, loss: 0.1725
+2025-05-01 18:35:31,490 - mmseg - INFO - Iter [4900/20000]	lr: 7.989e-06, eta: 2:37:14, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1582, aux_identity.acc_seg: 79.2817, loss: 0.1582
+2025-05-01 18:36:00,621 - mmseg - INFO - Iter [4950/20000]	lr: 7.968e-06, eta: 2:36:36, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1745, aux_identity.acc_seg: 76.8568, loss: 0.1745
+2025-05-01 18:36:29,809 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 18:36:29,809 - mmseg - INFO - Iter [5000/20000]	lr: 7.947e-06, eta: 2:35:59, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1583, aux_identity.acc_seg: 75.5644, loss: 0.1583
+2025-05-01 18:36:58,995 - mmseg - INFO - Iter [5050/20000]	lr: 7.927e-06, eta: 2:35:22, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1752, aux_identity.acc_seg: 72.9798, loss: 0.1752
+2025-05-01 18:37:28,210 - mmseg - INFO - Iter [5100/20000]	lr: 7.906e-06, eta: 2:34:45, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1512, aux_identity.acc_seg: 75.1500, loss: 0.1512
+2025-05-01 18:38:00,181 - mmseg - INFO - Iter [5150/20000]	lr: 7.885e-06, eta: 2:34:16, time: 0.639, data_time: 0.051, memory: 22331, aux_identity.loss_ce: 0.1413, aux_identity.acc_seg: 78.5313, loss: 0.1413
+2025-05-01 18:38:29,554 - mmseg - INFO - Iter [5200/20000]	lr: 7.864e-06, eta: 2:33:40, time: 0.587, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1717, aux_identity.acc_seg: 76.3259, loss: 0.1717
+2025-05-01 18:38:58,662 - mmseg - INFO - Iter [5250/20000]	lr: 7.843e-06, eta: 2:33:03, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1739, aux_identity.acc_seg: 75.6777, loss: 0.1739
+2025-05-01 18:39:27,856 - mmseg - INFO - Iter [5300/20000]	lr: 7.822e-06, eta: 2:32:27, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1381, aux_identity.acc_seg: 76.4081, loss: 0.1381
+2025-05-01 18:39:57,073 - mmseg - INFO - Iter [5350/20000]	lr: 7.801e-06, eta: 2:31:50, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1731, aux_identity.acc_seg: 75.7281, loss: 0.1731
+2025-05-01 18:40:26,310 - mmseg - INFO - Iter [5400/20000]	lr: 7.780e-06, eta: 2:31:14, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1605, aux_identity.acc_seg: 75.1997, loss: 0.1605
+2025-05-01 18:40:55,574 - mmseg - INFO - Iter [5450/20000]	lr: 7.760e-06, eta: 2:30:38, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1655, aux_identity.acc_seg: 76.6883, loss: 0.1655
+2025-05-01 18:41:24,905 - mmseg - INFO - Iter [5500/20000]	lr: 7.739e-06, eta: 2:30:03, time: 0.587, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1670, aux_identity.acc_seg: 76.8908, loss: 0.1670
+2025-05-01 18:41:54,085 - mmseg - INFO - Iter [5550/20000]	lr: 7.718e-06, eta: 2:29:27, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1282, aux_identity.acc_seg: 78.4105, loss: 0.1282
+2025-05-01 18:42:23,246 - mmseg - INFO - Iter [5600/20000]	lr: 7.697e-06, eta: 2:28:51, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1798, aux_identity.acc_seg: 76.4746, loss: 0.1798
+2025-05-01 18:42:52,434 - mmseg - INFO - Iter [5650/20000]	lr: 7.676e-06, eta: 2:28:15, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1608, aux_identity.acc_seg: 78.7773, loss: 0.1608
+2025-05-01 18:43:21,678 - mmseg - INFO - Iter [5700/20000]	lr: 7.655e-06, eta: 2:27:40, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1643, aux_identity.acc_seg: 77.6292, loss: 0.1643
+2025-05-01 18:43:50,868 - mmseg - INFO - Iter [5750/20000]	lr: 7.634e-06, eta: 2:27:04, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1641, aux_identity.acc_seg: 75.5821, loss: 0.1641
+2025-05-01 18:44:20,147 - mmseg - INFO - Iter [5800/20000]	lr: 7.613e-06, eta: 2:26:29, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1375, aux_identity.acc_seg: 78.8422, loss: 0.1375
+2025-05-01 18:44:49,306 - mmseg - INFO - Iter [5850/20000]	lr: 7.592e-06, eta: 2:25:54, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1493, aux_identity.acc_seg: 76.4414, loss: 0.1493
+2025-05-01 18:45:18,547 - mmseg - INFO - Iter [5900/20000]	lr: 7.571e-06, eta: 2:25:19, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1950, aux_identity.acc_seg: 74.5068, loss: 0.1950
+2025-05-01 18:45:47,839 - mmseg - INFO - Iter [5950/20000]	lr: 7.550e-06, eta: 2:24:44, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1668, aux_identity.acc_seg: 77.3531, loss: 0.1668
+2025-05-01 18:46:17,098 - mmseg - INFO - Saving checkpoint at 6000 iterations
+2025-05-01 18:46:20,069 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 18:46:20,069 - mmseg - INFO - Iter [6000/20000]	lr: 7.529e-06, eta: 2:24:16, time: 0.645, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1730, aux_identity.acc_seg: 75.5950, loss: 0.1730
+2025-05-01 18:47:52,007 - mmseg - INFO - per class results:
+2025-05-01 18:47:52,009 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|  Quadruped Head  |  72.1 | 75.49 |
+|  Quadruped Body  |  58.9 | 74.45 |
+|  Quadruped Foot  |  42.3 | 59.68 |
+|  Quadruped Tail  |  32.9 | 52.38 |
+|    Biped Head    | 70.19 | 84.89 |
+|    Biped Body    | 44.65 | 65.93 |
+|    Biped Hand    |  21.3 | 27.49 |
+|    Biped Foot    | 27.76 | 47.12 |
+|    Biped Tail    |  2.31 |  2.32 |
+|    Fish Head     | 49.97 | 66.24 |
+|    Fish Body     | 55.61 |  69.6 |
+|     Fish Fin     | 31.72 | 50.09 |
+|    Fish Tail     |  0.75 |  0.76 |
+|    Bird Head     | 63.62 | 73.44 |
+|    Bird Body     | 57.56 | 84.56 |
+|    Bird Wing     | 46.46 | 56.61 |
+|    Bird Foot     | 31.51 | 51.27 |
+|    Bird Tail     |  30.8 | 45.06 |
+|    Snake Head    | 52.32 | 64.15 |
+|    Snake Body    | 72.12 | 85.37 |
+|   Reptile Head   | 53.68 | 66.19 |
+|   Reptile Body   | 59.36 | 81.73 |
+|   Reptile Foot   | 35.09 | 54.47 |
+|   Reptile Tail   | 16.34 | 20.36 |
+|     Car Body     | 88.44 | 95.53 |
+|     Car Tire     | 70.75 | 81.45 |
+| Car Side Mirror  |  0.0  |  0.0  |
+|   Bicycle Body   | 30.61 | 38.57 |
+|   Bicycle Head   |  0.0  |  0.0  |
+|   Bicycle Seat   |  0.0  |  0.0  |
+|   Bicycle Tire   | 63.14 | 73.68 |
+|    Boat Body     | 61.38 | 86.05 |
+|    Boat Sail     | 79.63 | 97.15 |
+|  Aeroplane Head  |  0.45 |  0.46 |
+|  Aeroplane Body  | 45.39 | 77.44 |
+| Aeroplane Engine |  0.0  |  0.0  |
+|  Aeroplane Wing  |  40.8 | 76.88 |
+|  Aeroplane Tail  |  0.0  |  0.0  |
+|   Bottle Mouth   | 14.89 | 22.76 |
+|   Bottle Body    | 81.39 | 92.05 |
+|    Background    | 95.44 | 97.85 |
++------------------+-------+-------+
+2025-05-01 18:47:52,009 - mmseg - INFO - Summary:
+2025-05-01 18:47:52,009 - mmseg - INFO - 
++-------+------+-------+
+|  aAcc | mIoU |  mAcc |
++-------+------+-------+
+| 92.31 | 41.5 | 53.65 |
++-------+------+-------+
+2025-05-01 18:47:52,010 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 18:47:52,011 - mmseg - INFO - Iter(val) [1206]	aAcc: 0.9231, mIoU: 0.4150, mAcc: 0.5365, IoU.Quadruped Head: 0.7210, IoU.Quadruped Body: 0.5890, IoU.Quadruped Foot: 0.4230, IoU.Quadruped Tail: 0.3290, IoU.Biped Head: 0.7019, IoU.Biped Body: 0.4465, IoU.Biped Hand: 0.2130, IoU.Biped Foot: 0.2776, IoU.Biped Tail: 0.0231, IoU.Fish Head: 0.4997, IoU.Fish Body: 0.5561, IoU.Fish Fin: 0.3172, IoU.Fish Tail: 0.0075, IoU.Bird Head: 0.6362, IoU.Bird Body: 0.5756, IoU.Bird Wing: 0.4646, IoU.Bird Foot: 0.3151, IoU.Bird Tail: 0.3080, IoU.Snake Head: 0.5232, IoU.Snake Body: 0.7212, IoU.Reptile Head: 0.5368, IoU.Reptile Body: 0.5936, IoU.Reptile Foot: 0.3509, IoU.Reptile Tail: 0.1634, IoU.Car Body: 0.8844, IoU.Car Tire: 0.7075, IoU.Car Side Mirror: 0.0000, IoU.Bicycle Body: 0.3061, IoU.Bicycle Head: 0.0000, IoU.Bicycle Seat: 0.0000, IoU.Bicycle Tire: 0.6314, IoU.Boat Body: 0.6138, IoU.Boat Sail: 0.7963, IoU.Aeroplane Head: 0.0045, IoU.Aeroplane Body: 0.4539, IoU.Aeroplane Engine: 0.0000, IoU.Aeroplane Wing: 0.4080, IoU.Aeroplane Tail: 0.0000, IoU.Bottle Mouth: 0.1489, IoU.Bottle Body: 0.8139, IoU.Background: 0.9544, Acc.Quadruped Head: 0.7549, Acc.Quadruped Body: 0.7445, Acc.Quadruped Foot: 0.5968, Acc.Quadruped Tail: 0.5238, Acc.Biped Head: 0.8489, Acc.Biped Body: 0.6593, Acc.Biped Hand: 0.2749, Acc.Biped Foot: 0.4712, Acc.Biped Tail: 0.0232, Acc.Fish Head: 0.6624, Acc.Fish Body: 0.6960, Acc.Fish Fin: 0.5009, Acc.Fish Tail: 0.0076, Acc.Bird Head: 0.7344, Acc.Bird Body: 0.8456, Acc.Bird Wing: 0.5661, Acc.Bird Foot: 0.5127, Acc.Bird Tail: 0.4506, Acc.Snake Head: 0.6415, Acc.Snake Body: 0.8537, Acc.Reptile Head: 0.6619, Acc.Reptile Body: 0.8173, Acc.Reptile Foot: 0.5447, Acc.Reptile Tail: 0.2036, Acc.Car Body: 0.9553, Acc.Car Tire: 0.8145, Acc.Car Side Mirror: 0.0000, Acc.Bicycle Body: 0.3857, Acc.Bicycle Head: 0.0000, Acc.Bicycle Seat: 0.0000, Acc.Bicycle Tire: 0.7368, Acc.Boat Body: 0.8605, Acc.Boat Sail: 0.9715, Acc.Aeroplane Head: 0.0046, Acc.Aeroplane Body: 0.7744, Acc.Aeroplane Engine: 0.0000, Acc.Aeroplane Wing: 0.7688, Acc.Aeroplane Tail: 0.0000, Acc.Bottle Mouth: 0.2276, Acc.Bottle Body: 0.9205, Acc.Background: 0.9785
+2025-05-01 18:48:21,175 - mmseg - INFO - Iter [6050/20000]	lr: 7.508e-06, eta: 2:27:14, time: 2.422, data_time: 1.845, memory: 22331, aux_identity.loss_ce: 0.1544, aux_identity.acc_seg: 75.6983, loss: 0.1544
+2025-05-01 18:48:50,306 - mmseg - INFO - Iter [6100/20000]	lr: 7.487e-06, eta: 2:26:36, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1718, aux_identity.acc_seg: 77.3523, loss: 0.1718
+2025-05-01 18:49:19,528 - mmseg - INFO - Iter [6150/20000]	lr: 7.466e-06, eta: 2:25:59, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1716, aux_identity.acc_seg: 76.7682, loss: 0.1716
+2025-05-01 18:49:48,727 - mmseg - INFO - Iter [6200/20000]	lr: 7.445e-06, eta: 2:25:22, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1511, aux_identity.acc_seg: 78.7532, loss: 0.1511
+2025-05-01 18:50:17,990 - mmseg - INFO - Iter [6250/20000]	lr: 7.424e-06, eta: 2:24:45, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1722, aux_identity.acc_seg: 78.0591, loss: 0.1722
+2025-05-01 18:50:47,166 - mmseg - INFO - Iter [6300/20000]	lr: 7.403e-06, eta: 2:24:08, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1769, aux_identity.acc_seg: 76.4201, loss: 0.1769
+2025-05-01 18:51:16,434 - mmseg - INFO - Iter [6350/20000]	lr: 7.382e-06, eta: 2:23:32, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1502, aux_identity.acc_seg: 76.8824, loss: 0.1502
+2025-05-01 18:51:45,657 - mmseg - INFO - Iter [6400/20000]	lr: 7.361e-06, eta: 2:22:55, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1546, aux_identity.acc_seg: 78.5052, loss: 0.1546
+2025-05-01 18:52:14,942 - mmseg - INFO - Iter [6450/20000]	lr: 7.340e-06, eta: 2:22:19, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1760, aux_identity.acc_seg: 77.4910, loss: 0.1760
+2025-05-01 18:52:44,161 - mmseg - INFO - Iter [6500/20000]	lr: 7.319e-06, eta: 2:21:43, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1384, aux_identity.acc_seg: 77.8074, loss: 0.1384
+2025-05-01 18:53:13,430 - mmseg - INFO - Iter [6550/20000]	lr: 7.298e-06, eta: 2:21:07, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1858, aux_identity.acc_seg: 75.9200, loss: 0.1858
+2025-05-01 18:53:42,623 - mmseg - INFO - Iter [6600/20000]	lr: 7.277e-06, eta: 2:20:31, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1432, aux_identity.acc_seg: 78.2640, loss: 0.1432
+2025-05-01 18:54:11,867 - mmseg - INFO - Iter [6650/20000]	lr: 7.256e-06, eta: 2:19:55, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1392, aux_identity.acc_seg: 77.9328, loss: 0.1392
+2025-05-01 18:54:41,072 - mmseg - INFO - Iter [6700/20000]	lr: 7.235e-06, eta: 2:19:19, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1766, aux_identity.acc_seg: 76.5456, loss: 0.1766
+2025-05-01 18:55:10,235 - mmseg - INFO - Iter [6750/20000]	lr: 7.214e-06, eta: 2:18:43, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1550, aux_identity.acc_seg: 77.5488, loss: 0.1550
+2025-05-01 18:55:39,429 - mmseg - INFO - Iter [6800/20000]	lr: 7.192e-06, eta: 2:18:07, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1642, aux_identity.acc_seg: 78.3065, loss: 0.1642
+2025-05-01 18:56:08,647 - mmseg - INFO - Iter [6850/20000]	lr: 7.171e-06, eta: 2:17:32, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1425, aux_identity.acc_seg: 78.3672, loss: 0.1425
+2025-05-01 18:56:37,892 - mmseg - INFO - Iter [6900/20000]	lr: 7.150e-06, eta: 2:16:56, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1358, aux_identity.acc_seg: 78.9725, loss: 0.1358
+2025-05-01 18:57:06,995 - mmseg - INFO - Iter [6950/20000]	lr: 7.129e-06, eta: 2:16:21, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1373, aux_identity.acc_seg: 79.5669, loss: 0.1373
+2025-05-01 18:57:36,944 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 18:57:36,944 - mmseg - INFO - Iter [7000/20000]	lr: 7.108e-06, eta: 2:15:47, time: 0.599, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1438, aux_identity.acc_seg: 77.9698, loss: 0.1438
+2025-05-01 18:58:06,204 - mmseg - INFO - Iter [7050/20000]	lr: 7.087e-06, eta: 2:15:12, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1425, aux_identity.acc_seg: 79.9507, loss: 0.1425
+2025-05-01 18:58:35,431 - mmseg - INFO - Iter [7100/20000]	lr: 7.066e-06, eta: 2:14:36, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1502, aux_identity.acc_seg: 78.4130, loss: 0.1502
+2025-05-01 18:59:04,621 - mmseg - INFO - Iter [7150/20000]	lr: 7.044e-06, eta: 2:14:01, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1379, aux_identity.acc_seg: 78.2389, loss: 0.1379
+2025-05-01 18:59:33,864 - mmseg - INFO - Iter [7200/20000]	lr: 7.023e-06, eta: 2:13:26, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1590, aux_identity.acc_seg: 77.9829, loss: 0.1590
+2025-05-01 19:00:03,096 - mmseg - INFO - Iter [7250/20000]	lr: 7.002e-06, eta: 2:12:52, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1662, aux_identity.acc_seg: 75.8472, loss: 0.1662
+2025-05-01 19:00:32,298 - mmseg - INFO - Iter [7300/20000]	lr: 6.981e-06, eta: 2:12:17, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1680, aux_identity.acc_seg: 76.2786, loss: 0.1680
+2025-05-01 19:01:01,551 - mmseg - INFO - Iter [7350/20000]	lr: 6.960e-06, eta: 2:11:42, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1637, aux_identity.acc_seg: 76.1894, loss: 0.1637
+2025-05-01 19:01:30,746 - mmseg - INFO - Iter [7400/20000]	lr: 6.939e-06, eta: 2:11:07, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1429, aux_identity.acc_seg: 77.5316, loss: 0.1429
+2025-05-01 19:02:00,085 - mmseg - INFO - Iter [7450/20000]	lr: 6.917e-06, eta: 2:10:33, time: 0.587, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1477, aux_identity.acc_seg: 76.4640, loss: 0.1477
+2025-05-01 19:02:29,373 - mmseg - INFO - Iter [7500/20000]	lr: 6.896e-06, eta: 2:09:59, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1534, aux_identity.acc_seg: 78.1465, loss: 0.1534
+2025-05-01 19:02:58,600 - mmseg - INFO - Iter [7550/20000]	lr: 6.875e-06, eta: 2:09:24, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1646, aux_identity.acc_seg: 77.1365, loss: 0.1646
+2025-05-01 19:03:27,862 - mmseg - INFO - Iter [7600/20000]	lr: 6.854e-06, eta: 2:08:50, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1717, aux_identity.acc_seg: 77.8596, loss: 0.1717
+2025-05-01 19:03:57,072 - mmseg - INFO - Iter [7650/20000]	lr: 6.832e-06, eta: 2:08:15, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1475, aux_identity.acc_seg: 77.2586, loss: 0.1475
+2025-05-01 19:04:26,308 - mmseg - INFO - Iter [7700/20000]	lr: 6.811e-06, eta: 2:07:41, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1437, aux_identity.acc_seg: 78.2462, loss: 0.1437
+2025-05-01 19:04:55,527 - mmseg - INFO - Iter [7750/20000]	lr: 6.790e-06, eta: 2:07:07, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1605, aux_identity.acc_seg: 73.7147, loss: 0.1605
+2025-05-01 19:05:24,785 - mmseg - INFO - Iter [7800/20000]	lr: 6.769e-06, eta: 2:06:33, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1662, aux_identity.acc_seg: 77.1836, loss: 0.1662
+2025-05-01 19:05:54,071 - mmseg - INFO - Iter [7850/20000]	lr: 6.747e-06, eta: 2:05:59, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1446, aux_identity.acc_seg: 79.6600, loss: 0.1446
+2025-05-01 19:06:23,345 - mmseg - INFO - Iter [7900/20000]	lr: 6.726e-06, eta: 2:05:25, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1426, aux_identity.acc_seg: 79.2305, loss: 0.1426
+2025-05-01 19:06:52,577 - mmseg - INFO - Iter [7950/20000]	lr: 6.705e-06, eta: 2:04:51, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1560, aux_identity.acc_seg: 78.7065, loss: 0.1560
+2025-05-01 19:07:22,178 - mmseg - INFO - Saving checkpoint at 8000 iterations
+2025-05-01 19:07:25,225 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 19:07:25,225 - mmseg - INFO - Iter [8000/20000]	lr: 6.683e-06, eta: 2:04:22, time: 0.653, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1297, aux_identity.acc_seg: 78.8741, loss: 0.1297
+2025-05-01 19:08:56,311 - mmseg - INFO - per class results:
+2025-05-01 19:08:56,313 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|  Quadruped Head  | 79.49 |  88.1 |
+|  Quadruped Body  | 67.52 | 84.55 |
+|  Quadruped Foot  | 46.53 | 61.51 |
+|  Quadruped Tail  | 42.79 | 52.03 |
+|    Biped Head    | 75.71 | 88.94 |
+|    Biped Body    |  50.9 |  77.5 |
+|    Biped Hand    | 26.51 | 32.51 |
+|    Biped Foot    | 28.87 |  43.9 |
+|    Biped Tail    | 25.27 | 29.14 |
+|    Fish Head     | 60.07 | 76.92 |
+|    Fish Body     | 58.84 | 73.12 |
+|     Fish Fin     | 30.34 | 46.76 |
+|    Fish Tail     | 11.06 | 11.76 |
+|    Bird Head     | 72.54 |  86.9 |
+|    Bird Body     |  66.1 |  80.7 |
+|    Bird Wing     | 47.27 | 59.07 |
+|    Bird Foot     | 38.46 | 57.12 |
+|    Bird Tail     |  39.9 | 56.84 |
+|    Snake Head    | 61.61 | 77.95 |
+|    Snake Body    | 77.36 | 85.81 |
+|   Reptile Head   | 59.14 | 88.91 |
+|   Reptile Body   | 62.37 | 73.82 |
+|   Reptile Foot   | 39.54 | 61.57 |
+|   Reptile Tail   | 20.58 | 24.18 |
+|     Car Body     | 88.99 | 96.53 |
+|     Car Tire     | 72.46 | 86.85 |
+| Car Side Mirror  |  0.0  |  0.0  |
+|   Bicycle Body   | 41.54 | 66.59 |
+|   Bicycle Head   |  5.39 |  6.27 |
+|   Bicycle Seat   |  0.0  |  0.0  |
+|   Bicycle Tire   | 71.37 |  89.0 |
+|    Boat Body     | 64.13 | 83.18 |
+|    Boat Sail     | 78.28 | 96.95 |
+|  Aeroplane Head  | 12.91 | 23.39 |
+|  Aeroplane Body  | 53.42 | 95.87 |
+| Aeroplane Engine |  2.05 |  2.91 |
+|  Aeroplane Wing  |  9.06 | 14.11 |
+|  Aeroplane Tail  |  8.42 |  17.8 |
+|   Bottle Mouth   | 29.43 | 49.11 |
+|   Bottle Body    | 80.09 | 93.41 |
+|    Background    | 95.73 | 97.26 |
++------------------+-------+-------+
+2025-05-01 19:08:56,313 - mmseg - INFO - Summary:
+2025-05-01 19:08:56,313 - mmseg - INFO - 
++------+-------+-------+
+| aAcc |  mIoU |  mAcc |
++------+-------+-------+
+| 93.3 | 46.39 | 59.48 |
++------+-------+-------+
+2025-05-01 19:08:56,314 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 19:08:56,314 - mmseg - INFO - Iter(val) [1206]	aAcc: 0.9330, mIoU: 0.4639, mAcc: 0.5948, IoU.Quadruped Head: 0.7949, IoU.Quadruped Body: 0.6752, IoU.Quadruped Foot: 0.4653, IoU.Quadruped Tail: 0.4279, IoU.Biped Head: 0.7571, IoU.Biped Body: 0.5090, IoU.Biped Hand: 0.2651, IoU.Biped Foot: 0.2887, IoU.Biped Tail: 0.2527, IoU.Fish Head: 0.6007, IoU.Fish Body: 0.5884, IoU.Fish Fin: 0.3034, IoU.Fish Tail: 0.1106, IoU.Bird Head: 0.7254, IoU.Bird Body: 0.6610, IoU.Bird Wing: 0.4727, IoU.Bird Foot: 0.3846, IoU.Bird Tail: 0.3990, IoU.Snake Head: 0.6161, IoU.Snake Body: 0.7736, IoU.Reptile Head: 0.5914, IoU.Reptile Body: 0.6237, IoU.Reptile Foot: 0.3954, IoU.Reptile Tail: 0.2058, IoU.Car Body: 0.8899, IoU.Car Tire: 0.7246, IoU.Car Side Mirror: 0.0000, IoU.Bicycle Body: 0.4154, IoU.Bicycle Head: 0.0539, IoU.Bicycle Seat: 0.0000, IoU.Bicycle Tire: 0.7137, IoU.Boat Body: 0.6413, IoU.Boat Sail: 0.7828, IoU.Aeroplane Head: 0.1291, IoU.Aeroplane Body: 0.5342, IoU.Aeroplane Engine: 0.0205, IoU.Aeroplane Wing: 0.0906, IoU.Aeroplane Tail: 0.0842, IoU.Bottle Mouth: 0.2943, IoU.Bottle Body: 0.8009, IoU.Background: 0.9573, Acc.Quadruped Head: 0.8810, Acc.Quadruped Body: 0.8455, Acc.Quadruped Foot: 0.6151, Acc.Quadruped Tail: 0.5203, Acc.Biped Head: 0.8894, Acc.Biped Body: 0.7750, Acc.Biped Hand: 0.3251, Acc.Biped Foot: 0.4390, Acc.Biped Tail: 0.2914, Acc.Fish Head: 0.7692, Acc.Fish Body: 0.7312, Acc.Fish Fin: 0.4676, Acc.Fish Tail: 0.1176, Acc.Bird Head: 0.8690, Acc.Bird Body: 0.8070, Acc.Bird Wing: 0.5907, Acc.Bird Foot: 0.5712, Acc.Bird Tail: 0.5684, Acc.Snake Head: 0.7795, Acc.Snake Body: 0.8581, Acc.Reptile Head: 0.8891, Acc.Reptile Body: 0.7382, Acc.Reptile Foot: 0.6157, Acc.Reptile Tail: 0.2418, Acc.Car Body: 0.9653, Acc.Car Tire: 0.8685, Acc.Car Side Mirror: 0.0000, Acc.Bicycle Body: 0.6659, Acc.Bicycle Head: 0.0627, Acc.Bicycle Seat: 0.0000, Acc.Bicycle Tire: 0.8900, Acc.Boat Body: 0.8318, Acc.Boat Sail: 0.9695, Acc.Aeroplane Head: 0.2339, Acc.Aeroplane Body: 0.9587, Acc.Aeroplane Engine: 0.0291, Acc.Aeroplane Wing: 0.1411, Acc.Aeroplane Tail: 0.1780, Acc.Bottle Mouth: 0.4911, Acc.Bottle Body: 0.9341, Acc.Background: 0.9726
+2025-05-01 19:09:25,457 - mmseg - INFO - Iter [8050/20000]	lr: 6.662e-06, eta: 2:06:04, time: 2.404, data_time: 1.828, memory: 22331, aux_identity.loss_ce: 0.1493, aux_identity.acc_seg: 78.8440, loss: 0.1493
+2025-05-01 19:09:54,670 - mmseg - INFO - Iter [8100/20000]	lr: 6.641e-06, eta: 2:05:28, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1679, aux_identity.acc_seg: 75.7196, loss: 0.1679
+2025-05-01 19:10:23,833 - mmseg - INFO - Iter [8150/20000]	lr: 6.619e-06, eta: 2:04:53, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1764, aux_identity.acc_seg: 75.0697, loss: 0.1764
+2025-05-01 19:10:53,026 - mmseg - INFO - Iter [8200/20000]	lr: 6.598e-06, eta: 2:04:18, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1515, aux_identity.acc_seg: 78.9018, loss: 0.1515
+2025-05-01 19:11:22,305 - mmseg - INFO - Iter [8250/20000]	lr: 6.577e-06, eta: 2:03:43, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1608, aux_identity.acc_seg: 76.9089, loss: 0.1608
+2025-05-01 19:11:51,539 - mmseg - INFO - Iter [8300/20000]	lr: 6.555e-06, eta: 2:03:08, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1211, aux_identity.acc_seg: 79.8369, loss: 0.1211
+2025-05-01 19:12:20,713 - mmseg - INFO - Iter [8350/20000]	lr: 6.534e-06, eta: 2:02:33, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1375, aux_identity.acc_seg: 75.7988, loss: 0.1375
+2025-05-01 19:12:49,919 - mmseg - INFO - Iter [8400/20000]	lr: 6.513e-06, eta: 2:01:58, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1570, aux_identity.acc_seg: 77.9615, loss: 0.1570
+2025-05-01 19:13:19,063 - mmseg - INFO - Iter [8450/20000]	lr: 6.491e-06, eta: 2:01:24, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1237, aux_identity.acc_seg: 80.8258, loss: 0.1237
+2025-05-01 19:13:48,244 - mmseg - INFO - Iter [8500/20000]	lr: 6.470e-06, eta: 2:00:49, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1539, aux_identity.acc_seg: 75.8263, loss: 0.1539
+2025-05-01 19:14:17,392 - mmseg - INFO - Iter [8550/20000]	lr: 6.448e-06, eta: 2:00:14, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1371, aux_identity.acc_seg: 76.8273, loss: 0.1371
+2025-05-01 19:14:46,662 - mmseg - INFO - Iter [8600/20000]	lr: 6.427e-06, eta: 1:59:40, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1674, aux_identity.acc_seg: 75.2030, loss: 0.1674
+2025-05-01 19:15:15,920 - mmseg - INFO - Iter [8650/20000]	lr: 6.406e-06, eta: 1:59:05, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1490, aux_identity.acc_seg: 76.3522, loss: 0.1490
+2025-05-01 19:15:45,132 - mmseg - INFO - Iter [8700/20000]	lr: 6.384e-06, eta: 1:58:31, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1960, aux_identity.acc_seg: 74.5927, loss: 0.1960
+2025-05-01 19:16:14,352 - mmseg - INFO - Iter [8750/20000]	lr: 6.363e-06, eta: 1:57:57, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1393, aux_identity.acc_seg: 78.7450, loss: 0.1393
+2025-05-01 19:16:43,550 - mmseg - INFO - Iter [8800/20000]	lr: 6.341e-06, eta: 1:57:22, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1372, aux_identity.acc_seg: 79.3241, loss: 0.1372
+2025-05-01 19:17:13,512 - mmseg - INFO - Iter [8850/20000]	lr: 6.320e-06, eta: 1:56:49, time: 0.599, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1433, aux_identity.acc_seg: 77.6236, loss: 0.1433
+2025-05-01 19:17:42,732 - mmseg - INFO - Iter [8900/20000]	lr: 6.298e-06, eta: 1:56:15, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1245, aux_identity.acc_seg: 77.9319, loss: 0.1245
+2025-05-01 19:18:11,964 - mmseg - INFO - Iter [8950/20000]	lr: 6.277e-06, eta: 1:55:41, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1178, aux_identity.acc_seg: 81.4502, loss: 0.1178
+2025-05-01 19:18:41,252 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 19:18:41,252 - mmseg - INFO - Iter [9000/20000]	lr: 6.255e-06, eta: 1:55:07, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1337, aux_identity.acc_seg: 78.1886, loss: 0.1337
+2025-05-01 19:19:10,491 - mmseg - INFO - Iter [9050/20000]	lr: 6.234e-06, eta: 1:54:33, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1432, aux_identity.acc_seg: 78.7768, loss: 0.1432
+2025-05-01 19:19:39,662 - mmseg - INFO - Iter [9100/20000]	lr: 6.212e-06, eta: 1:53:59, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1576, aux_identity.acc_seg: 78.4333, loss: 0.1576
+2025-05-01 19:20:08,892 - mmseg - INFO - Iter [9150/20000]	lr: 6.191e-06, eta: 1:53:25, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1442, aux_identity.acc_seg: 79.5412, loss: 0.1442
+2025-05-01 19:20:38,235 - mmseg - INFO - Iter [9200/20000]	lr: 6.169e-06, eta: 1:52:51, time: 0.587, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1261, aux_identity.acc_seg: 79.3944, loss: 0.1261
+2025-05-01 19:21:07,504 - mmseg - INFO - Iter [9250/20000]	lr: 6.148e-06, eta: 1:52:17, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1631, aux_identity.acc_seg: 76.3339, loss: 0.1631
+2025-05-01 19:21:36,648 - mmseg - INFO - Iter [9300/20000]	lr: 6.126e-06, eta: 1:51:43, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1361, aux_identity.acc_seg: 78.8991, loss: 0.1361
+2025-05-01 19:22:05,825 - mmseg - INFO - Iter [9350/20000]	lr: 6.105e-06, eta: 1:51:10, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1243, aux_identity.acc_seg: 79.1862, loss: 0.1243
+2025-05-01 19:22:35,041 - mmseg - INFO - Iter [9400/20000]	lr: 6.083e-06, eta: 1:50:36, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1307, aux_identity.acc_seg: 76.5795, loss: 0.1307
+2025-05-01 19:23:04,308 - mmseg - INFO - Iter [9450/20000]	lr: 6.062e-06, eta: 1:50:02, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1392, aux_identity.acc_seg: 80.0328, loss: 0.1392
+2025-05-01 19:23:33,619 - mmseg - INFO - Iter [9500/20000]	lr: 6.040e-06, eta: 1:49:29, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1157, aux_identity.acc_seg: 78.6927, loss: 0.1157
+2025-05-01 19:24:02,834 - mmseg - INFO - Iter [9550/20000]	lr: 6.018e-06, eta: 1:48:55, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1471, aux_identity.acc_seg: 78.5351, loss: 0.1471
+2025-05-01 19:24:32,123 - mmseg - INFO - Iter [9600/20000]	lr: 5.997e-06, eta: 1:48:22, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1505, aux_identity.acc_seg: 78.3531, loss: 0.1505
+2025-05-01 19:25:01,283 - mmseg - INFO - Iter [9650/20000]	lr: 5.975e-06, eta: 1:47:48, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1441, aux_identity.acc_seg: 77.6866, loss: 0.1441
+2025-05-01 19:25:30,593 - mmseg - INFO - Iter [9700/20000]	lr: 5.953e-06, eta: 1:47:15, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1288, aux_identity.acc_seg: 79.9667, loss: 0.1288
+2025-05-01 19:25:59,836 - mmseg - INFO - Iter [9750/20000]	lr: 5.932e-06, eta: 1:46:42, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1201, aux_identity.acc_seg: 80.1854, loss: 0.1201
+2025-05-01 19:26:29,377 - mmseg - INFO - Iter [9800/20000]	lr: 5.910e-06, eta: 1:46:09, time: 0.591, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1456, aux_identity.acc_seg: 78.3355, loss: 0.1456
+2025-05-01 19:26:58,951 - mmseg - INFO - Iter [9850/20000]	lr: 5.888e-06, eta: 1:45:36, time: 0.591, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1408, aux_identity.acc_seg: 77.2715, loss: 0.1408
+2025-05-01 19:27:28,096 - mmseg - INFO - Iter [9900/20000]	lr: 5.867e-06, eta: 1:45:02, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1455, aux_identity.acc_seg: 77.6842, loss: 0.1455
+2025-05-01 19:27:57,311 - mmseg - INFO - Iter [9950/20000]	lr: 5.845e-06, eta: 1:44:29, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1261, aux_identity.acc_seg: 79.6424, loss: 0.1261
+2025-05-01 19:28:26,491 - mmseg - INFO - Saving checkpoint at 10000 iterations
+2025-05-01 19:28:29,473 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 19:28:29,473 - mmseg - INFO - Iter [10000/20000]	lr: 5.823e-06, eta: 1:43:59, time: 0.643, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1368, aux_identity.acc_seg: 79.0463, loss: 0.1368
+2025-05-01 19:29:59,973 - mmseg - INFO - per class results:
+2025-05-01 19:29:59,976 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|  Quadruped Head  | 75.91 | 79.82 |
+|  Quadruped Body  | 63.99 | 85.56 |
+|  Quadruped Foot  | 47.03 |  63.0 |
+|  Quadruped Tail  | 29.14 | 32.58 |
+|    Biped Head    | 71.97 | 78.04 |
+|    Biped Body    | 49.05 | 73.26 |
+|    Biped Hand    | 27.63 |  36.1 |
+|    Biped Foot    | 36.32 | 56.13 |
+|    Biped Tail    | 33.96 | 43.06 |
+|    Fish Head     | 54.25 | 59.86 |
+|    Fish Body     | 61.59 | 82.53 |
+|     Fish Fin     | 33.15 | 45.87 |
+|    Fish Tail     |  14.6 | 16.35 |
+|    Bird Head     | 69.51 |  80.2 |
+|    Bird Body     | 65.22 | 80.23 |
+|    Bird Wing     | 45.94 | 56.51 |
+|    Bird Foot     | 34.07 |  45.5 |
+|    Bird Tail     | 35.27 | 43.69 |
+|    Snake Head    | 58.54 | 71.64 |
+|    Snake Body    | 75.31 |  83.0 |
+|   Reptile Head   | 61.98 | 75.77 |
+|   Reptile Body   | 63.14 | 85.19 |
+|   Reptile Foot   | 39.25 | 51.52 |
+|   Reptile Tail   |  15.4 | 17.15 |
+|     Car Body     | 89.83 | 95.85 |
+|     Car Tire     | 73.81 | 82.67 |
+| Car Side Mirror  |  0.0  |  0.0  |
+|   Bicycle Body   | 37.54 | 57.39 |
+|   Bicycle Head   |  5.7  |  7.43 |
+|   Bicycle Seat   |  0.0  |  0.0  |
+|   Bicycle Tire   | 71.81 |  82.4 |
+|    Boat Body     | 57.88 | 63.59 |
+|    Boat Sail     | 79.83 | 88.71 |
+|  Aeroplane Head  | 27.51 | 30.58 |
+|  Aeroplane Body  |  53.7 |  67.1 |
+| Aeroplane Engine |  0.0  |  0.0  |
+|  Aeroplane Wing  |  17.7 | 27.37 |
+|  Aeroplane Tail  | 11.29 | 23.12 |
+|   Bottle Mouth   | 35.26 | 50.43 |
+|   Bottle Body    | 87.06 | 90.52 |
+|    Background    | 95.89 | 98.19 |
++------------------+-------+-------+
+2025-05-01 19:29:59,976 - mmseg - INFO - Summary:
+2025-05-01 19:29:59,976 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 93.29 | 46.51 | 56.29 |
++-------+-------+-------+
+2025-05-01 19:29:59,978 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 19:29:59,978 - mmseg - INFO - Iter(val) [1206]	aAcc: 0.9329, mIoU: 0.4651, mAcc: 0.5629, IoU.Quadruped Head: 0.7591, IoU.Quadruped Body: 0.6399, IoU.Quadruped Foot: 0.4703, IoU.Quadruped Tail: 0.2914, IoU.Biped Head: 0.7197, IoU.Biped Body: 0.4905, IoU.Biped Hand: 0.2763, IoU.Biped Foot: 0.3632, IoU.Biped Tail: 0.3396, IoU.Fish Head: 0.5425, IoU.Fish Body: 0.6159, IoU.Fish Fin: 0.3315, IoU.Fish Tail: 0.1460, IoU.Bird Head: 0.6951, IoU.Bird Body: 0.6522, IoU.Bird Wing: 0.4594, IoU.Bird Foot: 0.3407, IoU.Bird Tail: 0.3527, IoU.Snake Head: 0.5854, IoU.Snake Body: 0.7531, IoU.Reptile Head: 0.6198, IoU.Reptile Body: 0.6314, IoU.Reptile Foot: 0.3925, IoU.Reptile Tail: 0.1540, IoU.Car Body: 0.8983, IoU.Car Tire: 0.7381, IoU.Car Side Mirror: 0.0000, IoU.Bicycle Body: 0.3754, IoU.Bicycle Head: 0.0570, IoU.Bicycle Seat: 0.0000, IoU.Bicycle Tire: 0.7181, IoU.Boat Body: 0.5788, IoU.Boat Sail: 0.7983, IoU.Aeroplane Head: 0.2751, IoU.Aeroplane Body: 0.5370, IoU.Aeroplane Engine: 0.0000, IoU.Aeroplane Wing: 0.1770, IoU.Aeroplane Tail: 0.1129, IoU.Bottle Mouth: 0.3526, IoU.Bottle Body: 0.8706, IoU.Background: 0.9589, Acc.Quadruped Head: 0.7982, Acc.Quadruped Body: 0.8556, Acc.Quadruped Foot: 0.6300, Acc.Quadruped Tail: 0.3258, Acc.Biped Head: 0.7804, Acc.Biped Body: 0.7326, Acc.Biped Hand: 0.3610, Acc.Biped Foot: 0.5613, Acc.Biped Tail: 0.4306, Acc.Fish Head: 0.5986, Acc.Fish Body: 0.8253, Acc.Fish Fin: 0.4587, Acc.Fish Tail: 0.1635, Acc.Bird Head: 0.8020, Acc.Bird Body: 0.8023, Acc.Bird Wing: 0.5651, Acc.Bird Foot: 0.4550, Acc.Bird Tail: 0.4369, Acc.Snake Head: 0.7164, Acc.Snake Body: 0.8300, Acc.Reptile Head: 0.7577, Acc.Reptile Body: 0.8519, Acc.Reptile Foot: 0.5152, Acc.Reptile Tail: 0.1715, Acc.Car Body: 0.9585, Acc.Car Tire: 0.8267, Acc.Car Side Mirror: 0.0000, Acc.Bicycle Body: 0.5739, Acc.Bicycle Head: 0.0743, Acc.Bicycle Seat: 0.0000, Acc.Bicycle Tire: 0.8240, Acc.Boat Body: 0.6359, Acc.Boat Sail: 0.8871, Acc.Aeroplane Head: 0.3058, Acc.Aeroplane Body: 0.6710, Acc.Aeroplane Engine: 0.0000, Acc.Aeroplane Wing: 0.2737, Acc.Aeroplane Tail: 0.2312, Acc.Bottle Mouth: 0.5043, Acc.Bottle Body: 0.9052, Acc.Background: 0.9819
+2025-05-01 19:30:29,194 - mmseg - INFO - Iter [10050/20000]	lr: 5.802e-06, eta: 1:44:55, time: 2.394, data_time: 1.817, memory: 22331, aux_identity.loss_ce: 0.1461, aux_identity.acc_seg: 77.4644, loss: 0.1461
+2025-05-01 19:30:58,426 - mmseg - INFO - Iter [10100/20000]	lr: 5.780e-06, eta: 1:44:21, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1346, aux_identity.acc_seg: 77.8603, loss: 0.1346
+2025-05-01 19:31:27,706 - mmseg - INFO - Iter [10150/20000]	lr: 5.758e-06, eta: 1:43:48, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1258, aux_identity.acc_seg: 79.5687, loss: 0.1258
+2025-05-01 19:31:56,857 - mmseg - INFO - Iter [10200/20000]	lr: 5.737e-06, eta: 1:43:14, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1162, aux_identity.acc_seg: 77.9642, loss: 0.1162
+2025-05-01 19:32:28,225 - mmseg - INFO - Iter [10250/20000]	lr: 5.715e-06, eta: 1:42:42, time: 0.627, data_time: 0.050, memory: 22331, aux_identity.loss_ce: 0.1152, aux_identity.acc_seg: 79.7369, loss: 0.1152
+2025-05-01 19:32:57,409 - mmseg - INFO - Iter [10300/20000]	lr: 5.693e-06, eta: 1:42:08, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1063, aux_identity.acc_seg: 79.0786, loss: 0.1063
+2025-05-01 19:33:26,572 - mmseg - INFO - Iter [10350/20000]	lr: 5.671e-06, eta: 1:41:34, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1450, aux_identity.acc_seg: 77.6087, loss: 0.1450
+2025-05-01 19:33:55,732 - mmseg - INFO - Iter [10400/20000]	lr: 5.649e-06, eta: 1:41:00, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1569, aux_identity.acc_seg: 77.3096, loss: 0.1569
+2025-05-01 19:34:25,035 - mmseg - INFO - Iter [10450/20000]	lr: 5.628e-06, eta: 1:40:27, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1143, aux_identity.acc_seg: 80.7279, loss: 0.1143
+2025-05-01 19:34:54,385 - mmseg - INFO - Iter [10500/20000]	lr: 5.606e-06, eta: 1:39:53, time: 0.587, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1334, aux_identity.acc_seg: 81.1205, loss: 0.1334
+2025-05-01 19:35:23,563 - mmseg - INFO - Iter [10550/20000]	lr: 5.584e-06, eta: 1:39:19, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1167, aux_identity.acc_seg: 79.8744, loss: 0.1167
+2025-05-01 19:35:52,682 - mmseg - INFO - Iter [10600/20000]	lr: 5.562e-06, eta: 1:38:46, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1282, aux_identity.acc_seg: 81.8553, loss: 0.1282
+2025-05-01 19:36:22,081 - mmseg - INFO - Iter [10650/20000]	lr: 5.540e-06, eta: 1:38:12, time: 0.588, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1315, aux_identity.acc_seg: 80.6689, loss: 0.1315
+2025-05-01 19:36:51,780 - mmseg - INFO - Iter [10700/20000]	lr: 5.518e-06, eta: 1:37:39, time: 0.594, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1323, aux_identity.acc_seg: 81.1980, loss: 0.1323
+2025-05-01 19:37:20,972 - mmseg - INFO - Iter [10750/20000]	lr: 5.497e-06, eta: 1:37:06, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1529, aux_identity.acc_seg: 78.7910, loss: 0.1529
+2025-05-01 19:37:50,224 - mmseg - INFO - Iter [10800/20000]	lr: 5.475e-06, eta: 1:36:32, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1400, aux_identity.acc_seg: 77.9969, loss: 0.1400
+2025-05-01 19:38:19,429 - mmseg - INFO - Iter [10850/20000]	lr: 5.453e-06, eta: 1:35:59, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1505, aux_identity.acc_seg: 78.4260, loss: 0.1505
+2025-05-01 19:38:48,654 - mmseg - INFO - Iter [10900/20000]	lr: 5.431e-06, eta: 1:35:26, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1155, aux_identity.acc_seg: 81.1763, loss: 0.1155
+2025-05-01 19:39:17,797 - mmseg - INFO - Iter [10950/20000]	lr: 5.409e-06, eta: 1:34:52, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1243, aux_identity.acc_seg: 78.2283, loss: 0.1243
+2025-05-01 19:39:47,049 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 19:39:47,049 - mmseg - INFO - Iter [11000/20000]	lr: 5.387e-06, eta: 1:34:19, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1304, aux_identity.acc_seg: 80.4684, loss: 0.1304
+2025-05-01 19:40:16,243 - mmseg - INFO - Iter [11050/20000]	lr: 5.365e-06, eta: 1:33:46, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1277, aux_identity.acc_seg: 79.6540, loss: 0.1277
+2025-05-01 19:40:45,422 - mmseg - INFO - Iter [11100/20000]	lr: 5.343e-06, eta: 1:33:12, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1160, aux_identity.acc_seg: 80.9275, loss: 0.1160
+2025-05-01 19:41:14,624 - mmseg - INFO - Iter [11150/20000]	lr: 5.321e-06, eta: 1:32:39, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1145, aux_identity.acc_seg: 78.3753, loss: 0.1145
+2025-05-01 19:41:43,765 - mmseg - INFO - Iter [11200/20000]	lr: 5.299e-06, eta: 1:32:06, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1205, aux_identity.acc_seg: 80.2495, loss: 0.1205
+2025-05-01 19:42:12,916 - mmseg - INFO - Iter [11250/20000]	lr: 5.277e-06, eta: 1:31:33, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1081, aux_identity.acc_seg: 79.5471, loss: 0.1081
+2025-05-01 19:42:42,082 - mmseg - INFO - Iter [11300/20000]	lr: 5.255e-06, eta: 1:31:00, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0911, aux_identity.acc_seg: 82.1164, loss: 0.0911
+2025-05-01 19:43:11,267 - mmseg - INFO - Iter [11350/20000]	lr: 5.233e-06, eta: 1:30:27, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1327, aux_identity.acc_seg: 78.4346, loss: 0.1327
+2025-05-01 19:43:40,459 - mmseg - INFO - Iter [11400/20000]	lr: 5.211e-06, eta: 1:29:54, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1180, aux_identity.acc_seg: 80.5849, loss: 0.1180
+2025-05-01 19:44:09,693 - mmseg - INFO - Iter [11450/20000]	lr: 5.189e-06, eta: 1:29:21, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1511, aux_identity.acc_seg: 77.7260, loss: 0.1511
+2025-05-01 19:44:38,905 - mmseg - INFO - Iter [11500/20000]	lr: 5.167e-06, eta: 1:28:48, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1436, aux_identity.acc_seg: 78.7184, loss: 0.1436
+2025-05-01 19:45:08,113 - mmseg - INFO - Iter [11550/20000]	lr: 5.145e-06, eta: 1:28:15, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1216, aux_identity.acc_seg: 81.3150, loss: 0.1216
+2025-05-01 19:45:37,415 - mmseg - INFO - Iter [11600/20000]	lr: 5.123e-06, eta: 1:27:42, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1347, aux_identity.acc_seg: 79.5406, loss: 0.1347
+2025-05-01 19:46:06,656 - mmseg - INFO - Iter [11650/20000]	lr: 5.101e-06, eta: 1:27:09, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1161, aux_identity.acc_seg: 80.3204, loss: 0.1161
+2025-05-01 19:46:36,214 - mmseg - INFO - Iter [11700/20000]	lr: 5.079e-06, eta: 1:26:37, time: 0.591, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1376, aux_identity.acc_seg: 77.5173, loss: 0.1376
+2025-05-01 19:47:05,700 - mmseg - INFO - Iter [11750/20000]	lr: 5.057e-06, eta: 1:26:04, time: 0.590, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1191, aux_identity.acc_seg: 79.5745, loss: 0.1191
+2025-05-01 19:47:34,979 - mmseg - INFO - Iter [11800/20000]	lr: 5.035e-06, eta: 1:25:31, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1225, aux_identity.acc_seg: 81.1850, loss: 0.1225
+2025-05-01 19:48:04,211 - mmseg - INFO - Iter [11850/20000]	lr: 5.012e-06, eta: 1:24:59, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1276, aux_identity.acc_seg: 78.6856, loss: 0.1276
+2025-05-01 19:48:33,343 - mmseg - INFO - Iter [11900/20000]	lr: 4.990e-06, eta: 1:24:26, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1268, aux_identity.acc_seg: 79.4948, loss: 0.1268
+2025-05-01 19:49:02,608 - mmseg - INFO - Iter [11950/20000]	lr: 4.968e-06, eta: 1:23:53, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1371, aux_identity.acc_seg: 79.3827, loss: 0.1371
+2025-05-01 19:49:31,883 - mmseg - INFO - Saving checkpoint at 12000 iterations
+2025-05-01 19:49:34,859 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 19:49:34,859 - mmseg - INFO - Iter [12000/20000]	lr: 4.946e-06, eta: 1:23:23, time: 0.645, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1144, aux_identity.acc_seg: 83.2564, loss: 0.1144
+2025-05-01 19:51:06,635 - mmseg - INFO - per class results:
+2025-05-01 19:51:06,637 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|  Quadruped Head  | 79.43 | 91.82 |
+|  Quadruped Body  | 67.15 | 80.13 |
+|  Quadruped Foot  |  49.7 | 69.79 |
+|  Quadruped Tail  |  35.4 | 38.73 |
+|    Biped Head    | 72.73 | 82.87 |
+|    Biped Body    | 47.35 | 58.77 |
+|    Biped Hand    | 34.93 | 52.49 |
+|    Biped Foot    | 35.98 |  61.5 |
+|    Biped Tail    | 21.23 | 23.82 |
+|    Fish Head     | 63.43 |  78.5 |
+|    Fish Body     | 64.47 | 77.74 |
+|     Fish Fin     |  35.9 | 52.73 |
+|    Fish Tail     | 16.38 | 18.78 |
+|    Bird Head     | 73.61 | 84.94 |
+|    Bird Body     | 65.95 | 81.27 |
+|    Bird Wing     |  50.1 |  60.4 |
+|    Bird Foot     |  35.6 | 63.54 |
+|    Bird Tail     | 40.18 | 53.57 |
+|    Snake Head    | 63.58 |  79.7 |
+|    Snake Body    | 78.51 |  88.1 |
+|   Reptile Head   | 62.76 | 83.43 |
+|   Reptile Body   | 62.86 | 75.13 |
+|   Reptile Foot   | 41.98 | 67.07 |
+|   Reptile Tail   | 20.06 | 22.54 |
+|     Car Body     | 89.37 |  94.4 |
+|     Car Tire     | 74.65 | 86.42 |
+| Car Side Mirror  |  2.1  |  2.17 |
+|   Bicycle Body   | 35.12 | 67.57 |
+|   Bicycle Head   | 19.98 | 40.18 |
+|   Bicycle Seat   |  6.23 |  8.86 |
+|   Bicycle Tire   | 73.65 |  87.5 |
+|    Boat Body     | 67.25 | 92.45 |
+|    Boat Sail     | 81.02 | 93.88 |
+|  Aeroplane Head  | 30.59 | 51.39 |
+|  Aeroplane Body  | 51.97 |  77.5 |
+| Aeroplane Engine |  0.0  |  0.0  |
+|  Aeroplane Wing  | 13.03 | 19.53 |
+|  Aeroplane Tail  | 16.96 | 36.21 |
+|   Bottle Mouth   | 41.02 | 58.93 |
+|   Bottle Body    | 82.22 | 87.62 |
+|    Background    | 95.97 | 97.64 |
++------------------+-------+-------+
+2025-05-01 19:51:06,637 - mmseg - INFO - Summary:
+2025-05-01 19:51:06,637 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 93.56 | 48.79 | 62.19 |
++-------+-------+-------+
+2025-05-01 19:51:06,638 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 19:51:06,639 - mmseg - INFO - Iter(val) [1206]	aAcc: 0.9356, mIoU: 0.4879, mAcc: 0.6219, IoU.Quadruped Head: 0.7943, IoU.Quadruped Body: 0.6715, IoU.Quadruped Foot: 0.4970, IoU.Quadruped Tail: 0.3540, IoU.Biped Head: 0.7273, IoU.Biped Body: 0.4735, IoU.Biped Hand: 0.3493, IoU.Biped Foot: 0.3598, IoU.Biped Tail: 0.2123, IoU.Fish Head: 0.6343, IoU.Fish Body: 0.6447, IoU.Fish Fin: 0.3590, IoU.Fish Tail: 0.1638, IoU.Bird Head: 0.7361, IoU.Bird Body: 0.6595, IoU.Bird Wing: 0.5010, IoU.Bird Foot: 0.3560, IoU.Bird Tail: 0.4018, IoU.Snake Head: 0.6358, IoU.Snake Body: 0.7851, IoU.Reptile Head: 0.6276, IoU.Reptile Body: 0.6286, IoU.Reptile Foot: 0.4198, IoU.Reptile Tail: 0.2006, IoU.Car Body: 0.8937, IoU.Car Tire: 0.7465, IoU.Car Side Mirror: 0.0210, IoU.Bicycle Body: 0.3512, IoU.Bicycle Head: 0.1998, IoU.Bicycle Seat: 0.0623, IoU.Bicycle Tire: 0.7365, IoU.Boat Body: 0.6725, IoU.Boat Sail: 0.8102, IoU.Aeroplane Head: 0.3059, IoU.Aeroplane Body: 0.5197, IoU.Aeroplane Engine: 0.0000, IoU.Aeroplane Wing: 0.1303, IoU.Aeroplane Tail: 0.1696, IoU.Bottle Mouth: 0.4102, IoU.Bottle Body: 0.8222, IoU.Background: 0.9597, Acc.Quadruped Head: 0.9182, Acc.Quadruped Body: 0.8013, Acc.Quadruped Foot: 0.6979, Acc.Quadruped Tail: 0.3873, Acc.Biped Head: 0.8287, Acc.Biped Body: 0.5877, Acc.Biped Hand: 0.5249, Acc.Biped Foot: 0.6150, Acc.Biped Tail: 0.2382, Acc.Fish Head: 0.7850, Acc.Fish Body: 0.7774, Acc.Fish Fin: 0.5273, Acc.Fish Tail: 0.1878, Acc.Bird Head: 0.8494, Acc.Bird Body: 0.8127, Acc.Bird Wing: 0.6040, Acc.Bird Foot: 0.6354, Acc.Bird Tail: 0.5357, Acc.Snake Head: 0.7970, Acc.Snake Body: 0.8810, Acc.Reptile Head: 0.8343, Acc.Reptile Body: 0.7513, Acc.Reptile Foot: 0.6707, Acc.Reptile Tail: 0.2254, Acc.Car Body: 0.9440, Acc.Car Tire: 0.8642, Acc.Car Side Mirror: 0.0217, Acc.Bicycle Body: 0.6757, Acc.Bicycle Head: 0.4018, Acc.Bicycle Seat: 0.0886, Acc.Bicycle Tire: 0.8750, Acc.Boat Body: 0.9245, Acc.Boat Sail: 0.9388, Acc.Aeroplane Head: 0.5139, Acc.Aeroplane Body: 0.7750, Acc.Aeroplane Engine: 0.0000, Acc.Aeroplane Wing: 0.1953, Acc.Aeroplane Tail: 0.3621, Acc.Bottle Mouth: 0.5893, Acc.Bottle Body: 0.8762, Acc.Background: 0.9764
+2025-05-01 19:51:35,700 - mmseg - INFO - Iter [12050/20000]	lr: 4.924e-06, eta: 1:23:51, time: 2.417, data_time: 1.842, memory: 22331, aux_identity.loss_ce: 0.1142, aux_identity.acc_seg: 80.7530, loss: 0.1142
+2025-05-01 19:52:04,851 - mmseg - INFO - Iter [12100/20000]	lr: 4.901e-06, eta: 1:23:17, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1210, aux_identity.acc_seg: 80.6280, loss: 0.1210
+2025-05-01 19:52:34,006 - mmseg - INFO - Iter [12150/20000]	lr: 4.879e-06, eta: 1:22:44, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1319, aux_identity.acc_seg: 79.1799, loss: 0.1319
+2025-05-01 19:53:03,275 - mmseg - INFO - Iter [12200/20000]	lr: 4.857e-06, eta: 1:22:11, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1429, aux_identity.acc_seg: 78.4701, loss: 0.1429
+2025-05-01 19:53:32,565 - mmseg - INFO - Iter [12250/20000]	lr: 4.835e-06, eta: 1:21:38, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1063, aux_identity.acc_seg: 80.3980, loss: 0.1063
+2025-05-01 19:54:01,851 - mmseg - INFO - Iter [12300/20000]	lr: 4.812e-06, eta: 1:21:05, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1290, aux_identity.acc_seg: 80.3862, loss: 0.1290
+2025-05-01 19:54:31,116 - mmseg - INFO - Iter [12350/20000]	lr: 4.790e-06, eta: 1:20:32, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1365, aux_identity.acc_seg: 79.3776, loss: 0.1365
+2025-05-01 19:55:00,348 - mmseg - INFO - Iter [12400/20000]	lr: 4.768e-06, eta: 1:19:59, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1256, aux_identity.acc_seg: 79.3405, loss: 0.1256
+2025-05-01 19:55:29,612 - mmseg - INFO - Iter [12450/20000]	lr: 4.746e-06, eta: 1:19:26, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1172, aux_identity.acc_seg: 80.7152, loss: 0.1172
+2025-05-01 19:55:58,883 - mmseg - INFO - Iter [12500/20000]	lr: 4.723e-06, eta: 1:18:53, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1118, aux_identity.acc_seg: 80.6235, loss: 0.1118
+2025-05-01 19:56:28,480 - mmseg - INFO - Iter [12550/20000]	lr: 4.701e-06, eta: 1:18:20, time: 0.592, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1156, aux_identity.acc_seg: 78.8700, loss: 0.1156
+2025-05-01 19:56:57,981 - mmseg - INFO - Iter [12600/20000]	lr: 4.679e-06, eta: 1:17:47, time: 0.590, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1138, aux_identity.acc_seg: 79.2919, loss: 0.1138
+2025-05-01 19:57:27,254 - mmseg - INFO - Iter [12650/20000]	lr: 4.656e-06, eta: 1:17:15, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1196, aux_identity.acc_seg: 82.4200, loss: 0.1196
+2025-05-01 19:57:56,435 - mmseg - INFO - Iter [12700/20000]	lr: 4.634e-06, eta: 1:16:42, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1474, aux_identity.acc_seg: 78.7261, loss: 0.1474
+2025-05-01 19:58:25,631 - mmseg - INFO - Iter [12750/20000]	lr: 4.611e-06, eta: 1:16:09, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1247, aux_identity.acc_seg: 80.5164, loss: 0.1247
+2025-05-01 19:58:54,812 - mmseg - INFO - Iter [12800/20000]	lr: 4.589e-06, eta: 1:15:36, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1203, aux_identity.acc_seg: 79.9282, loss: 0.1203
+2025-05-01 19:59:24,043 - mmseg - INFO - Iter [12850/20000]	lr: 4.567e-06, eta: 1:15:03, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1037, aux_identity.acc_seg: 79.1992, loss: 0.1037
+2025-05-01 19:59:53,164 - mmseg - INFO - Iter [12900/20000]	lr: 4.544e-06, eta: 1:14:30, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1232, aux_identity.acc_seg: 79.2920, loss: 0.1232
+2025-05-01 20:00:22,423 - mmseg - INFO - Iter [12950/20000]	lr: 4.522e-06, eta: 1:13:58, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1179, aux_identity.acc_seg: 79.3147, loss: 0.1179
+2025-05-01 20:00:51,630 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 20:00:51,630 - mmseg - INFO - Iter [13000/20000]	lr: 4.499e-06, eta: 1:13:25, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1377, aux_identity.acc_seg: 78.1845, loss: 0.1377
+2025-05-01 20:01:20,867 - mmseg - INFO - Iter [13050/20000]	lr: 4.477e-06, eta: 1:12:52, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1207, aux_identity.acc_seg: 77.7950, loss: 0.1207
+2025-05-01 20:01:50,054 - mmseg - INFO - Iter [13100/20000]	lr: 4.454e-06, eta: 1:12:20, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1311, aux_identity.acc_seg: 79.5878, loss: 0.1311
+2025-05-01 20:02:19,259 - mmseg - INFO - Iter [13150/20000]	lr: 4.432e-06, eta: 1:11:47, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1120, aux_identity.acc_seg: 80.7997, loss: 0.1120
+2025-05-01 20:02:48,427 - mmseg - INFO - Iter [13200/20000]	lr: 4.409e-06, eta: 1:11:14, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1090, aux_identity.acc_seg: 80.5260, loss: 0.1090
+2025-05-01 20:03:17,605 - mmseg - INFO - Iter [13250/20000]	lr: 4.386e-06, eta: 1:10:42, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1310, aux_identity.acc_seg: 80.0261, loss: 0.1310
+2025-05-01 20:03:46,828 - mmseg - INFO - Iter [13300/20000]	lr: 4.364e-06, eta: 1:10:09, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1164, aux_identity.acc_seg: 79.2939, loss: 0.1164
+2025-05-01 20:04:16,116 - mmseg - INFO - Iter [13350/20000]	lr: 4.341e-06, eta: 1:09:37, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1200, aux_identity.acc_seg: 79.2854, loss: 0.1200
+2025-05-01 20:04:45,403 - mmseg - INFO - Iter [13400/20000]	lr: 4.319e-06, eta: 1:09:04, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1252, aux_identity.acc_seg: 79.6339, loss: 0.1252
+2025-05-01 20:05:14,708 - mmseg - INFO - Iter [13450/20000]	lr: 4.296e-06, eta: 1:08:32, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1165, aux_identity.acc_seg: 79.2984, loss: 0.1165
+2025-05-01 20:05:43,980 - mmseg - INFO - Iter [13500/20000]	lr: 4.273e-06, eta: 1:08:00, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1099, aux_identity.acc_seg: 82.7726, loss: 0.1099
+2025-05-01 20:06:13,317 - mmseg - INFO - Iter [13550/20000]	lr: 4.251e-06, eta: 1:07:27, time: 0.587, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1266, aux_identity.acc_seg: 78.7407, loss: 0.1266
+2025-05-01 20:06:43,267 - mmseg - INFO - Iter [13600/20000]	lr: 4.228e-06, eta: 1:06:55, time: 0.599, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1172, aux_identity.acc_seg: 81.2536, loss: 0.1172
+2025-05-01 20:07:12,444 - mmseg - INFO - Iter [13650/20000]	lr: 4.205e-06, eta: 1:06:23, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1287, aux_identity.acc_seg: 78.7574, loss: 0.1287
+2025-05-01 20:07:41,639 - mmseg - INFO - Iter [13700/20000]	lr: 4.183e-06, eta: 1:05:50, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1464, aux_identity.acc_seg: 78.1073, loss: 0.1464
+2025-05-01 20:08:10,884 - mmseg - INFO - Iter [13750/20000]	lr: 4.160e-06, eta: 1:05:18, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1086, aux_identity.acc_seg: 81.9674, loss: 0.1086
+2025-05-01 20:08:40,141 - mmseg - INFO - Iter [13800/20000]	lr: 4.137e-06, eta: 1:04:46, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1020, aux_identity.acc_seg: 82.1934, loss: 0.1020
+2025-05-01 20:09:09,385 - mmseg - INFO - Iter [13850/20000]	lr: 4.114e-06, eta: 1:04:14, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1165, aux_identity.acc_seg: 81.8056, loss: 0.1165
+2025-05-01 20:09:38,611 - mmseg - INFO - Iter [13900/20000]	lr: 4.092e-06, eta: 1:03:41, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1129, aux_identity.acc_seg: 80.4869, loss: 0.1129
+2025-05-01 20:10:07,792 - mmseg - INFO - Iter [13950/20000]	lr: 4.069e-06, eta: 1:03:09, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1142, aux_identity.acc_seg: 79.7888, loss: 0.1142
+2025-05-01 20:10:37,002 - mmseg - INFO - Saving checkpoint at 14000 iterations
+2025-05-01 20:10:40,086 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 20:10:40,086 - mmseg - INFO - Iter [14000/20000]	lr: 4.046e-06, eta: 1:02:38, time: 0.646, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1096, aux_identity.acc_seg: 79.8178, loss: 0.1096
+2025-05-01 20:12:11,002 - mmseg - INFO - per class results:
+2025-05-01 20:12:11,004 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|  Quadruped Head  | 80.41 | 92.71 |
+|  Quadruped Body  | 67.73 | 80.57 |
+|  Quadruped Foot  |  49.6 | 63.44 |
+|  Quadruped Tail  | 47.81 | 52.21 |
+|    Biped Head    | 78.02 | 89.47 |
+|    Biped Body    | 50.13 | 65.03 |
+|    Biped Hand    | 39.79 | 58.21 |
+|    Biped Foot    |  36.3 | 49.22 |
+|    Biped Tail    | 39.09 | 43.65 |
+|    Fish Head     | 51.24 | 67.72 |
+|    Fish Body     | 59.94 |  83.0 |
+|     Fish Fin     | 36.92 | 57.96 |
+|    Fish Tail     |  0.92 |  0.92 |
+|    Bird Head     | 73.71 | 85.62 |
+|    Bird Body     | 69.33 | 82.25 |
+|    Bird Wing     | 52.74 | 58.86 |
+|    Bird Foot     | 33.61 | 45.13 |
+|    Bird Tail     | 43.19 | 52.14 |
+|    Snake Head    |  62.3 | 73.41 |
+|    Snake Body    |  81.5 | 90.86 |
+|   Reptile Head   |  67.2 | 84.33 |
+|   Reptile Body   | 69.98 | 83.09 |
+|   Reptile Foot   | 45.14 | 60.55 |
+|   Reptile Tail   | 22.83 | 28.98 |
+|     Car Body     | 91.27 | 95.24 |
+|     Car Tire     | 76.74 | 85.65 |
+| Car Side Mirror  |  0.22 |  0.22 |
+|   Bicycle Body   |  42.7 | 52.45 |
+|   Bicycle Head   | 23.99 | 35.28 |
+|   Bicycle Seat   |  0.0  |  0.0  |
+|   Bicycle Tire   | 74.96 | 85.07 |
+|    Boat Body     | 74.87 | 89.19 |
+|    Boat Sail     | 86.22 | 92.87 |
+|  Aeroplane Head  | 26.73 | 53.81 |
+|  Aeroplane Body  | 59.06 | 80.01 |
+| Aeroplane Engine |  3.83 |  4.12 |
+|  Aeroplane Wing  | 13.13 |  20.8 |
+|  Aeroplane Tail  | 25.09 | 52.44 |
+|   Bottle Mouth   | 44.58 | 66.06 |
+|   Bottle Body    | 85.93 | 92.16 |
+|    Background    | 96.21 | 98.07 |
++------------------+-------+-------+
+2025-05-01 20:12:11,004 - mmseg - INFO - Summary:
+2025-05-01 20:12:11,004 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 94.15 | 50.85 | 62.26 |
++-------+-------+-------+
+2025-05-01 20:12:11,005 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 20:12:11,005 - mmseg - INFO - Iter(val) [1206]	aAcc: 0.9415, mIoU: 0.5085, mAcc: 0.6226, IoU.Quadruped Head: 0.8041, IoU.Quadruped Body: 0.6773, IoU.Quadruped Foot: 0.4960, IoU.Quadruped Tail: 0.4781, IoU.Biped Head: 0.7802, IoU.Biped Body: 0.5013, IoU.Biped Hand: 0.3979, IoU.Biped Foot: 0.3630, IoU.Biped Tail: 0.3909, IoU.Fish Head: 0.5124, IoU.Fish Body: 0.5994, IoU.Fish Fin: 0.3692, IoU.Fish Tail: 0.0092, IoU.Bird Head: 0.7371, IoU.Bird Body: 0.6933, IoU.Bird Wing: 0.5274, IoU.Bird Foot: 0.3361, IoU.Bird Tail: 0.4319, IoU.Snake Head: 0.6230, IoU.Snake Body: 0.8150, IoU.Reptile Head: 0.6720, IoU.Reptile Body: 0.6998, IoU.Reptile Foot: 0.4514, IoU.Reptile Tail: 0.2283, IoU.Car Body: 0.9127, IoU.Car Tire: 0.7674, IoU.Car Side Mirror: 0.0022, IoU.Bicycle Body: 0.4270, IoU.Bicycle Head: 0.2399, IoU.Bicycle Seat: 0.0000, IoU.Bicycle Tire: 0.7496, IoU.Boat Body: 0.7487, IoU.Boat Sail: 0.8622, IoU.Aeroplane Head: 0.2673, IoU.Aeroplane Body: 0.5906, IoU.Aeroplane Engine: 0.0383, IoU.Aeroplane Wing: 0.1313, IoU.Aeroplane Tail: 0.2509, IoU.Bottle Mouth: 0.4458, IoU.Bottle Body: 0.8593, IoU.Background: 0.9621, Acc.Quadruped Head: 0.9271, Acc.Quadruped Body: 0.8057, Acc.Quadruped Foot: 0.6344, Acc.Quadruped Tail: 0.5221, Acc.Biped Head: 0.8947, Acc.Biped Body: 0.6503, Acc.Biped Hand: 0.5821, Acc.Biped Foot: 0.4922, Acc.Biped Tail: 0.4365, Acc.Fish Head: 0.6772, Acc.Fish Body: 0.8300, Acc.Fish Fin: 0.5796, Acc.Fish Tail: 0.0092, Acc.Bird Head: 0.8562, Acc.Bird Body: 0.8225, Acc.Bird Wing: 0.5886, Acc.Bird Foot: 0.4513, Acc.Bird Tail: 0.5214, Acc.Snake Head: 0.7341, Acc.Snake Body: 0.9086, Acc.Reptile Head: 0.8433, Acc.Reptile Body: 0.8309, Acc.Reptile Foot: 0.6055, Acc.Reptile Tail: 0.2898, Acc.Car Body: 0.9524, Acc.Car Tire: 0.8565, Acc.Car Side Mirror: 0.0022, Acc.Bicycle Body: 0.5245, Acc.Bicycle Head: 0.3528, Acc.Bicycle Seat: 0.0000, Acc.Bicycle Tire: 0.8507, Acc.Boat Body: 0.8919, Acc.Boat Sail: 0.9287, Acc.Aeroplane Head: 0.5381, Acc.Aeroplane Body: 0.8001, Acc.Aeroplane Engine: 0.0412, Acc.Aeroplane Wing: 0.2080, Acc.Aeroplane Tail: 0.5244, Acc.Bottle Mouth: 0.6606, Acc.Bottle Body: 0.9216, Acc.Background: 0.9807
+2025-05-01 20:12:40,213 - mmseg - INFO - Iter [14050/20000]	lr: 4.023e-06, eta: 1:02:44, time: 2.402, data_time: 1.825, memory: 22331, aux_identity.loss_ce: 0.1251, aux_identity.acc_seg: 81.7716, loss: 0.1251
+2025-05-01 20:13:09,340 - mmseg - INFO - Iter [14100/20000]	lr: 4.000e-06, eta: 1:02:12, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1174, aux_identity.acc_seg: 79.2796, loss: 0.1174
+2025-05-01 20:13:38,556 - mmseg - INFO - Iter [14150/20000]	lr: 3.977e-06, eta: 1:01:39, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1278, aux_identity.acc_seg: 81.0296, loss: 0.1278
+2025-05-01 20:14:07,832 - mmseg - INFO - Iter [14200/20000]	lr: 3.954e-06, eta: 1:01:06, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1101, aux_identity.acc_seg: 81.6955, loss: 0.1101
+2025-05-01 20:14:37,142 - mmseg - INFO - Iter [14250/20000]	lr: 3.931e-06, eta: 1:00:34, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1122, aux_identity.acc_seg: 78.1159, loss: 0.1122
+2025-05-01 20:15:06,354 - mmseg - INFO - Iter [14300/20000]	lr: 3.909e-06, eta: 1:00:01, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1064, aux_identity.acc_seg: 79.6820, loss: 0.1064
+2025-05-01 20:15:35,613 - mmseg - INFO - Iter [14350/20000]	lr: 3.886e-06, eta: 0:59:29, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0988, aux_identity.acc_seg: 80.9650, loss: 0.0988
+2025-05-01 20:16:04,776 - mmseg - INFO - Iter [14400/20000]	lr: 3.863e-06, eta: 0:58:56, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1082, aux_identity.acc_seg: 81.7991, loss: 0.1082
+2025-05-01 20:16:33,852 - mmseg - INFO - Iter [14450/20000]	lr: 3.840e-06, eta: 0:58:24, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1147, aux_identity.acc_seg: 79.2179, loss: 0.1147
+2025-05-01 20:17:03,862 - mmseg - INFO - Iter [14500/20000]	lr: 3.817e-06, eta: 0:57:52, time: 0.600, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1317, aux_identity.acc_seg: 81.3480, loss: 0.1317
+2025-05-01 20:17:33,036 - mmseg - INFO - Iter [14550/20000]	lr: 3.793e-06, eta: 0:57:19, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1231, aux_identity.acc_seg: 79.7834, loss: 0.1231
+2025-05-01 20:18:02,191 - mmseg - INFO - Iter [14600/20000]	lr: 3.770e-06, eta: 0:56:47, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1050, aux_identity.acc_seg: 77.8323, loss: 0.1050
+2025-05-01 20:18:31,306 - mmseg - INFO - Iter [14650/20000]	lr: 3.747e-06, eta: 0:56:14, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0947, aux_identity.acc_seg: 82.6824, loss: 0.0947
+2025-05-01 20:19:00,527 - mmseg - INFO - Iter [14700/20000]	lr: 3.724e-06, eta: 0:55:42, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1239, aux_identity.acc_seg: 79.8539, loss: 0.1239
+2025-05-01 20:19:29,682 - mmseg - INFO - Iter [14750/20000]	lr: 3.701e-06, eta: 0:55:10, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1179, aux_identity.acc_seg: 80.3114, loss: 0.1179
+2025-05-01 20:19:58,920 - mmseg - INFO - Iter [14800/20000]	lr: 3.678e-06, eta: 0:54:37, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1039, aux_identity.acc_seg: 80.3568, loss: 0.1039
+2025-05-01 20:20:28,147 - mmseg - INFO - Iter [14850/20000]	lr: 3.655e-06, eta: 0:54:05, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0975, aux_identity.acc_seg: 79.6839, loss: 0.0975
+2025-05-01 20:20:57,423 - mmseg - INFO - Iter [14900/20000]	lr: 3.632e-06, eta: 0:53:33, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0897, aux_identity.acc_seg: 80.9404, loss: 0.0897
+2025-05-01 20:21:26,539 - mmseg - INFO - Iter [14950/20000]	lr: 3.608e-06, eta: 0:53:00, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1185, aux_identity.acc_seg: 83.1983, loss: 0.1185
+2025-05-01 20:21:55,729 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 20:21:55,729 - mmseg - INFO - Iter [15000/20000]	lr: 3.585e-06, eta: 0:52:28, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1063, aux_identity.acc_seg: 83.2107, loss: 0.1063
+2025-05-01 20:22:24,940 - mmseg - INFO - Iter [15050/20000]	lr: 3.562e-06, eta: 0:51:56, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1262, aux_identity.acc_seg: 80.5552, loss: 0.1262
+2025-05-01 20:22:54,169 - mmseg - INFO - Iter [15100/20000]	lr: 3.538e-06, eta: 0:51:24, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1296, aux_identity.acc_seg: 81.2669, loss: 0.1296
+2025-05-01 20:23:23,388 - mmseg - INFO - Iter [15150/20000]	lr: 3.515e-06, eta: 0:50:51, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1025, aux_identity.acc_seg: 81.1901, loss: 0.1025
+2025-05-01 20:23:52,571 - mmseg - INFO - Iter [15200/20000]	lr: 3.492e-06, eta: 0:50:19, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1325, aux_identity.acc_seg: 79.1509, loss: 0.1325
+2025-05-01 20:24:21,812 - mmseg - INFO - Iter [15250/20000]	lr: 3.468e-06, eta: 0:49:47, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1267, aux_identity.acc_seg: 80.7398, loss: 0.1267
+2025-05-01 20:24:51,032 - mmseg - INFO - Iter [15300/20000]	lr: 3.445e-06, eta: 0:49:15, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1332, aux_identity.acc_seg: 78.9089, loss: 0.1332
+2025-05-01 20:25:22,422 - mmseg - INFO - Iter [15350/20000]	lr: 3.422e-06, eta: 0:48:44, time: 0.628, data_time: 0.049, memory: 22331, aux_identity.loss_ce: 0.1280, aux_identity.acc_seg: 78.0151, loss: 0.1280
+2025-05-01 20:25:51,641 - mmseg - INFO - Iter [15400/20000]	lr: 3.398e-06, eta: 0:48:11, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1003, aux_identity.acc_seg: 79.0689, loss: 0.1003
+2025-05-01 20:26:20,881 - mmseg - INFO - Iter [15450/20000]	lr: 3.375e-06, eta: 0:47:39, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0990, aux_identity.acc_seg: 83.4574, loss: 0.0990
+2025-05-01 20:26:50,066 - mmseg - INFO - Iter [15500/20000]	lr: 3.351e-06, eta: 0:47:07, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1043, aux_identity.acc_seg: 79.2310, loss: 0.1043
+2025-05-01 20:27:19,992 - mmseg - INFO - Iter [15550/20000]	lr: 3.328e-06, eta: 0:46:35, time: 0.599, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0851, aux_identity.acc_seg: 81.4283, loss: 0.0851
+2025-05-01 20:27:49,188 - mmseg - INFO - Iter [15600/20000]	lr: 3.304e-06, eta: 0:46:03, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1013, aux_identity.acc_seg: 83.0948, loss: 0.1013
+2025-05-01 20:28:18,389 - mmseg - INFO - Iter [15650/20000]	lr: 3.281e-06, eta: 0:45:31, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0969, aux_identity.acc_seg: 79.7672, loss: 0.0969
+2025-05-01 20:28:47,619 - mmseg - INFO - Iter [15700/20000]	lr: 3.257e-06, eta: 0:44:59, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0910, aux_identity.acc_seg: 83.2688, loss: 0.0910
+2025-05-01 20:29:16,795 - mmseg - INFO - Iter [15750/20000]	lr: 3.233e-06, eta: 0:44:27, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1100, aux_identity.acc_seg: 79.7992, loss: 0.1100
+2025-05-01 20:29:45,952 - mmseg - INFO - Iter [15800/20000]	lr: 3.210e-06, eta: 0:43:55, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1086, aux_identity.acc_seg: 81.4934, loss: 0.1086
+2025-05-01 20:30:15,123 - mmseg - INFO - Iter [15850/20000]	lr: 3.186e-06, eta: 0:43:23, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1154, aux_identity.acc_seg: 79.9199, loss: 0.1154
+2025-05-01 20:30:44,300 - mmseg - INFO - Iter [15900/20000]	lr: 3.162e-06, eta: 0:42:51, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1191, aux_identity.acc_seg: 81.7248, loss: 0.1191
+2025-05-01 20:31:13,535 - mmseg - INFO - Iter [15950/20000]	lr: 3.139e-06, eta: 0:42:20, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1076, aux_identity.acc_seg: 81.2838, loss: 0.1076
+2025-05-01 20:31:42,735 - mmseg - INFO - Saving checkpoint at 16000 iterations
+2025-05-01 20:31:45,727 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 20:31:45,728 - mmseg - INFO - Iter [16000/20000]	lr: 3.115e-06, eta: 0:41:48, time: 0.644, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0887, aux_identity.acc_seg: 82.0613, loss: 0.0887
+2025-05-01 20:33:16,362 - mmseg - INFO - per class results:
+2025-05-01 20:33:16,363 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|  Quadruped Head  | 81.44 | 90.44 |
+|  Quadruped Body  | 68.35 | 81.75 |
+|  Quadruped Foot  | 50.49 | 62.24 |
+|  Quadruped Tail  |  46.6 | 52.05 |
+|    Biped Head    | 79.16 |  91.2 |
+|    Biped Body    | 54.94 | 74.96 |
+|    Biped Hand    | 39.76 | 52.71 |
+|    Biped Foot    | 36.63 | 45.24 |
+|    Biped Tail    | 38.99 | 42.92 |
+|    Fish Head     | 59.45 | 81.32 |
+|    Fish Body     | 63.79 | 80.13 |
+|     Fish Fin     | 41.29 |  56.2 |
+|    Fish Tail     | 27.36 | 30.66 |
+|    Bird Head     | 75.11 | 86.23 |
+|    Bird Body     | 68.25 | 80.78 |
+|    Bird Wing     | 52.32 | 65.84 |
+|    Bird Foot     | 37.71 | 48.34 |
+|    Bird Tail     |  47.1 | 57.87 |
+|    Snake Head    | 61.68 | 86.81 |
+|    Snake Body    | 80.45 | 88.41 |
+|   Reptile Head   |  64.6 | 90.31 |
+|   Reptile Body   | 65.58 | 73.95 |
+|   Reptile Foot   | 49.16 | 64.59 |
+|   Reptile Tail   | 25.92 | 35.25 |
+|     Car Body     | 91.42 |  95.5 |
+|     Car Tire     | 74.49 | 90.72 |
+| Car Side Mirror  |  2.82 |  2.85 |
+|   Bicycle Body   | 42.43 | 48.22 |
+|   Bicycle Head   | 23.31 | 37.09 |
+|   Bicycle Seat   | 14.18 | 14.67 |
+|   Bicycle Tire   | 76.14 | 88.67 |
+|    Boat Body     |  74.2 | 82.42 |
+|    Boat Sail     |  83.6 | 92.82 |
+|  Aeroplane Head  | 43.19 | 57.88 |
+|  Aeroplane Body  | 59.89 | 70.67 |
+| Aeroplane Engine |  1.7  |  1.74 |
+|  Aeroplane Wing  | 23.74 | 36.69 |
+|  Aeroplane Tail  |  28.9 | 63.82 |
+|   Bottle Mouth   | 33.77 | 78.23 |
+|   Bottle Body    |  86.5 | 94.25 |
+|    Background    | 96.19 | 98.07 |
++------------------+-------+-------+
+2025-05-01 20:33:16,363 - mmseg - INFO - Summary:
+2025-05-01 20:33:16,363 - mmseg - INFO - 
++------+-------+-------+
+| aAcc |  mIoU |  mAcc |
++------+-------+-------+
+| 94.2 | 52.99 | 65.23 |
++------+-------+-------+
+2025-05-01 20:33:16,365 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 20:33:16,365 - mmseg - INFO - Iter(val) [1206]	aAcc: 0.9420, mIoU: 0.5299, mAcc: 0.6523, IoU.Quadruped Head: 0.8144, IoU.Quadruped Body: 0.6835, IoU.Quadruped Foot: 0.5049, IoU.Quadruped Tail: 0.4660, IoU.Biped Head: 0.7916, IoU.Biped Body: 0.5494, IoU.Biped Hand: 0.3976, IoU.Biped Foot: 0.3663, IoU.Biped Tail: 0.3899, IoU.Fish Head: 0.5945, IoU.Fish Body: 0.6379, IoU.Fish Fin: 0.4129, IoU.Fish Tail: 0.2736, IoU.Bird Head: 0.7511, IoU.Bird Body: 0.6825, IoU.Bird Wing: 0.5232, IoU.Bird Foot: 0.3771, IoU.Bird Tail: 0.4710, IoU.Snake Head: 0.6168, IoU.Snake Body: 0.8045, IoU.Reptile Head: 0.6460, IoU.Reptile Body: 0.6558, IoU.Reptile Foot: 0.4916, IoU.Reptile Tail: 0.2592, IoU.Car Body: 0.9142, IoU.Car Tire: 0.7449, IoU.Car Side Mirror: 0.0282, IoU.Bicycle Body: 0.4243, IoU.Bicycle Head: 0.2331, IoU.Bicycle Seat: 0.1418, IoU.Bicycle Tire: 0.7614, IoU.Boat Body: 0.7420, IoU.Boat Sail: 0.8360, IoU.Aeroplane Head: 0.4319, IoU.Aeroplane Body: 0.5989, IoU.Aeroplane Engine: 0.0170, IoU.Aeroplane Wing: 0.2374, IoU.Aeroplane Tail: 0.2890, IoU.Bottle Mouth: 0.3377, IoU.Bottle Body: 0.8650, IoU.Background: 0.9619, Acc.Quadruped Head: 0.9044, Acc.Quadruped Body: 0.8175, Acc.Quadruped Foot: 0.6224, Acc.Quadruped Tail: 0.5205, Acc.Biped Head: 0.9120, Acc.Biped Body: 0.7496, Acc.Biped Hand: 0.5271, Acc.Biped Foot: 0.4524, Acc.Biped Tail: 0.4292, Acc.Fish Head: 0.8132, Acc.Fish Body: 0.8013, Acc.Fish Fin: 0.5620, Acc.Fish Tail: 0.3066, Acc.Bird Head: 0.8623, Acc.Bird Body: 0.8078, Acc.Bird Wing: 0.6584, Acc.Bird Foot: 0.4834, Acc.Bird Tail: 0.5787, Acc.Snake Head: 0.8681, Acc.Snake Body: 0.8841, Acc.Reptile Head: 0.9031, Acc.Reptile Body: 0.7395, Acc.Reptile Foot: 0.6459, Acc.Reptile Tail: 0.3525, Acc.Car Body: 0.9550, Acc.Car Tire: 0.9072, Acc.Car Side Mirror: 0.0285, Acc.Bicycle Body: 0.4822, Acc.Bicycle Head: 0.3709, Acc.Bicycle Seat: 0.1467, Acc.Bicycle Tire: 0.8867, Acc.Boat Body: 0.8242, Acc.Boat Sail: 0.9282, Acc.Aeroplane Head: 0.5788, Acc.Aeroplane Body: 0.7067, Acc.Aeroplane Engine: 0.0174, Acc.Aeroplane Wing: 0.3669, Acc.Aeroplane Tail: 0.6382, Acc.Bottle Mouth: 0.7823, Acc.Bottle Body: 0.9425, Acc.Background: 0.9807
+2025-05-01 20:33:45,535 - mmseg - INFO - Iter [16050/20000]	lr: 3.091e-06, eta: 0:41:39, time: 2.396, data_time: 1.820, memory: 22331, aux_identity.loss_ce: 0.0925, aux_identity.acc_seg: 82.6507, loss: 0.0925
+2025-05-01 20:34:14,728 - mmseg - INFO - Iter [16100/20000]	lr: 3.067e-06, eta: 0:41:07, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0863, aux_identity.acc_seg: 79.1569, loss: 0.0863
+2025-05-01 20:34:43,938 - mmseg - INFO - Iter [16150/20000]	lr: 3.043e-06, eta: 0:40:34, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1034, aux_identity.acc_seg: 80.4563, loss: 0.1034
+2025-05-01 20:35:13,191 - mmseg - INFO - Iter [16200/20000]	lr: 3.019e-06, eta: 0:40:02, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1067, aux_identity.acc_seg: 81.3980, loss: 0.1067
+2025-05-01 20:35:42,376 - mmseg - INFO - Iter [16250/20000]	lr: 2.995e-06, eta: 0:39:30, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1012, aux_identity.acc_seg: 81.1639, loss: 0.1012
+2025-05-01 20:36:11,504 - mmseg - INFO - Iter [16300/20000]	lr: 2.972e-06, eta: 0:38:58, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1006, aux_identity.acc_seg: 81.2811, loss: 0.1006
+2025-05-01 20:36:40,872 - mmseg - INFO - Iter [16350/20000]	lr: 2.948e-06, eta: 0:38:26, time: 0.587, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1009, aux_identity.acc_seg: 83.8493, loss: 0.1009
+2025-05-01 20:37:10,650 - mmseg - INFO - Iter [16400/20000]	lr: 2.924e-06, eta: 0:37:54, time: 0.596, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0937, aux_identity.acc_seg: 82.6278, loss: 0.0937
+2025-05-01 20:37:39,778 - mmseg - INFO - Iter [16450/20000]	lr: 2.899e-06, eta: 0:37:22, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1188, aux_identity.acc_seg: 80.9576, loss: 0.1188
+2025-05-01 20:38:08,957 - mmseg - INFO - Iter [16500/20000]	lr: 2.875e-06, eta: 0:36:50, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1093, aux_identity.acc_seg: 80.7576, loss: 0.1093
+2025-05-01 20:38:38,225 - mmseg - INFO - Iter [16550/20000]	lr: 2.851e-06, eta: 0:36:18, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0954, aux_identity.acc_seg: 81.6826, loss: 0.0954
+2025-05-01 20:39:07,490 - mmseg - INFO - Iter [16600/20000]	lr: 2.827e-06, eta: 0:35:45, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0960, aux_identity.acc_seg: 84.0334, loss: 0.0960
+2025-05-01 20:39:36,642 - mmseg - INFO - Iter [16650/20000]	lr: 2.803e-06, eta: 0:35:13, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1105, aux_identity.acc_seg: 81.8101, loss: 0.1105
+2025-05-01 20:40:05,786 - mmseg - INFO - Iter [16700/20000]	lr: 2.779e-06, eta: 0:34:41, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1043, aux_identity.acc_seg: 80.1890, loss: 0.1043
+2025-05-01 20:40:34,927 - mmseg - INFO - Iter [16750/20000]	lr: 2.754e-06, eta: 0:34:09, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0885, aux_identity.acc_seg: 81.4693, loss: 0.0885
+2025-05-01 20:41:04,170 - mmseg - INFO - Iter [16800/20000]	lr: 2.730e-06, eta: 0:33:37, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0947, aux_identity.acc_seg: 81.4753, loss: 0.0947
+2025-05-01 20:41:33,382 - mmseg - INFO - Iter [16850/20000]	lr: 2.706e-06, eta: 0:33:05, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0961, aux_identity.acc_seg: 83.0810, loss: 0.0961
+2025-05-01 20:42:02,596 - mmseg - INFO - Iter [16900/20000]	lr: 2.681e-06, eta: 0:32:34, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1273, aux_identity.acc_seg: 79.9221, loss: 0.1273
+2025-05-01 20:42:31,782 - mmseg - INFO - Iter [16950/20000]	lr: 2.657e-06, eta: 0:32:02, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1050, aux_identity.acc_seg: 78.7401, loss: 0.1050
+2025-05-01 20:43:00,941 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 20:43:00,941 - mmseg - INFO - Iter [17000/20000]	lr: 2.633e-06, eta: 0:31:30, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1061, aux_identity.acc_seg: 80.7205, loss: 0.1061
+2025-05-01 20:43:30,090 - mmseg - INFO - Iter [17050/20000]	lr: 2.608e-06, eta: 0:30:58, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1023, aux_identity.acc_seg: 81.0180, loss: 0.1023
+2025-05-01 20:43:59,337 - mmseg - INFO - Iter [17100/20000]	lr: 2.583e-06, eta: 0:30:26, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0980, aux_identity.acc_seg: 79.7846, loss: 0.0980
+2025-05-01 20:44:28,567 - mmseg - INFO - Iter [17150/20000]	lr: 2.559e-06, eta: 0:29:54, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0920, aux_identity.acc_seg: 81.5682, loss: 0.0920
+2025-05-01 20:44:57,753 - mmseg - INFO - Iter [17200/20000]	lr: 2.534e-06, eta: 0:29:22, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0897, aux_identity.acc_seg: 82.0766, loss: 0.0897
+2025-05-01 20:45:26,962 - mmseg - INFO - Iter [17250/20000]	lr: 2.510e-06, eta: 0:28:50, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1010, aux_identity.acc_seg: 81.8305, loss: 0.1010
+2025-05-01 20:45:56,130 - mmseg - INFO - Iter [17300/20000]	lr: 2.485e-06, eta: 0:28:18, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1098, aux_identity.acc_seg: 81.0096, loss: 0.1098
+2025-05-01 20:46:25,604 - mmseg - INFO - Iter [17350/20000]	lr: 2.460e-06, eta: 0:27:47, time: 0.589, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0979, aux_identity.acc_seg: 82.3476, loss: 0.0979
+2025-05-01 20:46:55,408 - mmseg - INFO - Iter [17400/20000]	lr: 2.435e-06, eta: 0:27:15, time: 0.596, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1087, aux_identity.acc_seg: 81.5112, loss: 0.1087
+2025-05-01 20:47:24,635 - mmseg - INFO - Iter [17450/20000]	lr: 2.410e-06, eta: 0:26:43, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1348, aux_identity.acc_seg: 79.0394, loss: 0.1348
+2025-05-01 20:47:53,949 - mmseg - INFO - Iter [17500/20000]	lr: 2.386e-06, eta: 0:26:11, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1196, aux_identity.acc_seg: 78.0790, loss: 0.1196
+2025-05-01 20:48:23,186 - mmseg - INFO - Iter [17550/20000]	lr: 2.361e-06, eta: 0:25:40, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1017, aux_identity.acc_seg: 80.0211, loss: 0.1017
+2025-05-01 20:48:52,386 - mmseg - INFO - Iter [17600/20000]	lr: 2.336e-06, eta: 0:25:08, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0967, aux_identity.acc_seg: 82.3831, loss: 0.0967
+2025-05-01 20:49:21,664 - mmseg - INFO - Iter [17650/20000]	lr: 2.311e-06, eta: 0:24:36, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0936, aux_identity.acc_seg: 81.6358, loss: 0.0936
+2025-05-01 20:49:50,933 - mmseg - INFO - Iter [17700/20000]	lr: 2.285e-06, eta: 0:24:05, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0944, aux_identity.acc_seg: 81.2027, loss: 0.0944
+2025-05-01 20:50:20,090 - mmseg - INFO - Iter [17750/20000]	lr: 2.260e-06, eta: 0:23:33, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0893, aux_identity.acc_seg: 82.1682, loss: 0.0893
+2025-05-01 20:50:49,303 - mmseg - INFO - Iter [17800/20000]	lr: 2.235e-06, eta: 0:23:01, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1079, aux_identity.acc_seg: 79.6579, loss: 0.1079
+2025-05-01 20:51:18,442 - mmseg - INFO - Iter [17850/20000]	lr: 2.210e-06, eta: 0:22:30, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0982, aux_identity.acc_seg: 80.6776, loss: 0.0982
+2025-05-01 20:51:47,730 - mmseg - INFO - Iter [17900/20000]	lr: 2.184e-06, eta: 0:21:58, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1331, aux_identity.acc_seg: 80.5918, loss: 0.1331
+2025-05-01 20:52:16,884 - mmseg - INFO - Iter [17950/20000]	lr: 2.159e-06, eta: 0:21:26, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0998, aux_identity.acc_seg: 80.3361, loss: 0.0998
+2025-05-01 20:52:46,084 - mmseg - INFO - Saving checkpoint at 18000 iterations
+2025-05-01 20:52:49,000 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 20:52:49,000 - mmseg - INFO - Iter [18000/20000]	lr: 2.134e-06, eta: 0:20:55, time: 0.642, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0924, aux_identity.acc_seg: 81.5297, loss: 0.0924
+2025-05-01 20:54:20,386 - mmseg - INFO - per class results:
+2025-05-01 20:54:20,388 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|  Quadruped Head  |  83.3 | 91.34 |
+|  Quadruped Body  | 69.85 | 84.88 |
+|  Quadruped Foot  |  51.9 | 63.78 |
+|  Quadruped Tail  | 47.46 | 57.55 |
+|    Biped Head    | 80.14 | 91.01 |
+|    Biped Body    | 52.17 | 64.69 |
+|    Biped Hand    | 42.45 | 63.54 |
+|    Biped Foot    |  37.6 | 46.51 |
+|    Biped Tail    | 42.84 | 54.45 |
+|    Fish Head     | 69.04 | 79.53 |
+|    Fish Body     | 66.91 | 85.18 |
+|     Fish Fin     | 40.65 | 65.71 |
+|    Fish Tail     |  4.91 |  5.09 |
+|    Bird Head     | 75.71 | 86.47 |
+|    Bird Body     | 69.14 | 81.53 |
+|    Bird Wing     | 56.85 | 73.83 |
+|    Bird Foot     | 40.19 | 53.37 |
+|    Bird Tail     | 46.95 | 58.02 |
+|    Snake Head    | 66.56 | 82.16 |
+|    Snake Body    | 81.55 | 88.89 |
+|   Reptile Head   | 72.51 | 84.75 |
+|   Reptile Body   | 73.63 | 84.66 |
+|   Reptile Foot   | 49.15 | 64.42 |
+|   Reptile Tail   | 27.49 | 32.13 |
+|     Car Body     | 91.64 | 96.18 |
+|     Car Tire     | 77.75 | 88.66 |
+| Car Side Mirror  |  0.87 |  0.91 |
+|   Bicycle Body   | 48.61 | 57.49 |
+|   Bicycle Head   | 23.85 |  40.2 |
+|   Bicycle Seat   | 14.56 | 14.86 |
+|   Bicycle Tire   |  76.7 | 87.81 |
+|    Boat Body     | 76.49 | 84.87 |
+|    Boat Sail     | 85.37 | 95.63 |
+|  Aeroplane Head  | 43.59 | 52.92 |
+|  Aeroplane Body  | 66.29 | 82.85 |
+| Aeroplane Engine |  9.96 | 12.13 |
+|  Aeroplane Wing  |  20.8 | 29.98 |
+|  Aeroplane Tail  | 26.54 | 57.59 |
+|   Bottle Mouth   |  45.0 | 75.44 |
+|   Bottle Body    | 88.55 |  93.5 |
+|    Background    | 96.49 |  98.3 |
++------------------+-------+-------+
+2025-05-01 20:54:20,388 - mmseg - INFO - Summary:
+2025-05-01 20:54:20,388 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 94.69 | 54.68 | 66.17 |
++-------+-------+-------+
+2025-05-01 20:54:20,389 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 20:54:20,389 - mmseg - INFO - Iter(val) [1206]	aAcc: 0.9469, mIoU: 0.5468, mAcc: 0.6617, IoU.Quadruped Head: 0.8330, IoU.Quadruped Body: 0.6985, IoU.Quadruped Foot: 0.5190, IoU.Quadruped Tail: 0.4746, IoU.Biped Head: 0.8014, IoU.Biped Body: 0.5217, IoU.Biped Hand: 0.4245, IoU.Biped Foot: 0.3760, IoU.Biped Tail: 0.4284, IoU.Fish Head: 0.6904, IoU.Fish Body: 0.6691, IoU.Fish Fin: 0.4065, IoU.Fish Tail: 0.0491, IoU.Bird Head: 0.7571, IoU.Bird Body: 0.6914, IoU.Bird Wing: 0.5685, IoU.Bird Foot: 0.4019, IoU.Bird Tail: 0.4695, IoU.Snake Head: 0.6656, IoU.Snake Body: 0.8155, IoU.Reptile Head: 0.7251, IoU.Reptile Body: 0.7363, IoU.Reptile Foot: 0.4915, IoU.Reptile Tail: 0.2749, IoU.Car Body: 0.9164, IoU.Car Tire: 0.7775, IoU.Car Side Mirror: 0.0087, IoU.Bicycle Body: 0.4861, IoU.Bicycle Head: 0.2385, IoU.Bicycle Seat: 0.1456, IoU.Bicycle Tire: 0.7670, IoU.Boat Body: 0.7649, IoU.Boat Sail: 0.8537, IoU.Aeroplane Head: 0.4359, IoU.Aeroplane Body: 0.6629, IoU.Aeroplane Engine: 0.0996, IoU.Aeroplane Wing: 0.2080, IoU.Aeroplane Tail: 0.2654, IoU.Bottle Mouth: 0.4500, IoU.Bottle Body: 0.8855, IoU.Background: 0.9649, Acc.Quadruped Head: 0.9134, Acc.Quadruped Body: 0.8488, Acc.Quadruped Foot: 0.6378, Acc.Quadruped Tail: 0.5755, Acc.Biped Head: 0.9101, Acc.Biped Body: 0.6469, Acc.Biped Hand: 0.6354, Acc.Biped Foot: 0.4651, Acc.Biped Tail: 0.5445, Acc.Fish Head: 0.7953, Acc.Fish Body: 0.8518, Acc.Fish Fin: 0.6571, Acc.Fish Tail: 0.0509, Acc.Bird Head: 0.8647, Acc.Bird Body: 0.8153, Acc.Bird Wing: 0.7383, Acc.Bird Foot: 0.5337, Acc.Bird Tail: 0.5802, Acc.Snake Head: 0.8216, Acc.Snake Body: 0.8889, Acc.Reptile Head: 0.8475, Acc.Reptile Body: 0.8466, Acc.Reptile Foot: 0.6442, Acc.Reptile Tail: 0.3213, Acc.Car Body: 0.9618, Acc.Car Tire: 0.8866, Acc.Car Side Mirror: 0.0091, Acc.Bicycle Body: 0.5749, Acc.Bicycle Head: 0.4020, Acc.Bicycle Seat: 0.1486, Acc.Bicycle Tire: 0.8781, Acc.Boat Body: 0.8487, Acc.Boat Sail: 0.9563, Acc.Aeroplane Head: 0.5292, Acc.Aeroplane Body: 0.8285, Acc.Aeroplane Engine: 0.1213, Acc.Aeroplane Wing: 0.2998, Acc.Aeroplane Tail: 0.5759, Acc.Bottle Mouth: 0.7544, Acc.Bottle Body: 0.9350, Acc.Background: 0.9830
+2025-05-01 20:54:49,591 - mmseg - INFO - Iter [18050/20000]	lr: 2.108e-06, eta: 0:20:33, time: 2.412, data_time: 1.835, memory: 22331, aux_identity.loss_ce: 0.1101, aux_identity.acc_seg: 80.1098, loss: 0.1101
+2025-05-01 20:55:18,812 - mmseg - INFO - Iter [18100/20000]	lr: 2.082e-06, eta: 0:20:01, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0978, aux_identity.acc_seg: 81.5729, loss: 0.0978
+2025-05-01 20:55:47,912 - mmseg - INFO - Iter [18150/20000]	lr: 2.057e-06, eta: 0:19:29, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0972, aux_identity.acc_seg: 81.9075, loss: 0.0972
+2025-05-01 20:56:17,160 - mmseg - INFO - Iter [18200/20000]	lr: 2.031e-06, eta: 0:18:58, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1147, aux_identity.acc_seg: 79.6181, loss: 0.1147
+2025-05-01 20:56:47,135 - mmseg - INFO - Iter [18250/20000]	lr: 2.005e-06, eta: 0:18:26, time: 0.599, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0950, aux_identity.acc_seg: 81.6104, loss: 0.0950
+2025-05-01 20:57:16,351 - mmseg - INFO - Iter [18300/20000]	lr: 1.979e-06, eta: 0:17:54, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0924, aux_identity.acc_seg: 81.7643, loss: 0.0924
+2025-05-01 20:57:45,561 - mmseg - INFO - Iter [18350/20000]	lr: 1.953e-06, eta: 0:17:22, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0887, aux_identity.acc_seg: 82.8303, loss: 0.0887
+2025-05-01 20:58:14,693 - mmseg - INFO - Iter [18400/20000]	lr: 1.927e-06, eta: 0:16:50, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0972, aux_identity.acc_seg: 79.6273, loss: 0.0972
+2025-05-01 20:58:43,863 - mmseg - INFO - Iter [18450/20000]	lr: 1.901e-06, eta: 0:16:19, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0871, aux_identity.acc_seg: 81.0698, loss: 0.0871
+2025-05-01 20:59:13,127 - mmseg - INFO - Iter [18500/20000]	lr: 1.875e-06, eta: 0:15:47, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0855, aux_identity.acc_seg: 82.4303, loss: 0.0855
+2025-05-01 20:59:42,338 - mmseg - INFO - Iter [18550/20000]	lr: 1.849e-06, eta: 0:15:15, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1033, aux_identity.acc_seg: 80.7282, loss: 0.1033
+2025-05-01 21:00:11,536 - mmseg - INFO - Iter [18600/20000]	lr: 1.822e-06, eta: 0:14:43, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1018, aux_identity.acc_seg: 82.7477, loss: 0.1018
+2025-05-01 21:00:40,732 - mmseg - INFO - Iter [18650/20000]	lr: 1.796e-06, eta: 0:14:12, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1114, aux_identity.acc_seg: 80.2630, loss: 0.1114
+2025-05-01 21:01:09,870 - mmseg - INFO - Iter [18700/20000]	lr: 1.769e-06, eta: 0:13:40, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0949, aux_identity.acc_seg: 83.5002, loss: 0.0949
+2025-05-01 21:01:38,991 - mmseg - INFO - Iter [18750/20000]	lr: 1.743e-06, eta: 0:13:08, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0918, aux_identity.acc_seg: 81.1622, loss: 0.0918
+2025-05-01 21:02:08,123 - mmseg - INFO - Iter [18800/20000]	lr: 1.716e-06, eta: 0:12:36, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1042, aux_identity.acc_seg: 80.0546, loss: 0.1042
+2025-05-01 21:02:37,215 - mmseg - INFO - Iter [18850/20000]	lr: 1.689e-06, eta: 0:12:05, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0960, aux_identity.acc_seg: 79.7869, loss: 0.0960
+2025-05-01 21:03:06,325 - mmseg - INFO - Iter [18900/20000]	lr: 1.662e-06, eta: 0:11:33, time: 0.582, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0996, aux_identity.acc_seg: 79.9989, loss: 0.0996
+2025-05-01 21:03:35,612 - mmseg - INFO - Iter [18950/20000]	lr: 1.635e-06, eta: 0:11:01, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0898, aux_identity.acc_seg: 82.8038, loss: 0.0898
+2025-05-01 21:04:04,814 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 21:04:04,814 - mmseg - INFO - Iter [19000/20000]	lr: 1.608e-06, eta: 0:10:30, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1060, aux_identity.acc_seg: 82.7338, loss: 0.1060
+2025-05-01 21:04:34,015 - mmseg - INFO - Iter [19050/20000]	lr: 1.580e-06, eta: 0:09:58, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0875, aux_identity.acc_seg: 82.3901, loss: 0.0875
+2025-05-01 21:05:03,162 - mmseg - INFO - Iter [19100/20000]	lr: 1.553e-06, eta: 0:09:27, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0875, aux_identity.acc_seg: 81.7927, loss: 0.0875
+2025-05-01 21:05:32,482 - mmseg - INFO - Iter [19150/20000]	lr: 1.525e-06, eta: 0:08:55, time: 0.586, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0780, aux_identity.acc_seg: 82.0580, loss: 0.0780
+2025-05-01 21:06:01,644 - mmseg - INFO - Iter [19200/20000]	lr: 1.497e-06, eta: 0:08:23, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0957, aux_identity.acc_seg: 80.7532, loss: 0.0957
+2025-05-01 21:06:31,336 - mmseg - INFO - Iter [19250/20000]	lr: 1.469e-06, eta: 0:07:52, time: 0.594, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0951, aux_identity.acc_seg: 81.2497, loss: 0.0951
+2025-05-01 21:07:00,704 - mmseg - INFO - Iter [19300/20000]	lr: 1.441e-06, eta: 0:07:20, time: 0.587, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0989, aux_identity.acc_seg: 81.9728, loss: 0.0989
+2025-05-01 21:07:29,911 - mmseg - INFO - Iter [19350/20000]	lr: 1.413e-06, eta: 0:06:49, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0992, aux_identity.acc_seg: 82.6669, loss: 0.0992
+2025-05-01 21:07:59,152 - mmseg - INFO - Iter [19400/20000]	lr: 1.384e-06, eta: 0:06:17, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1027, aux_identity.acc_seg: 83.3533, loss: 0.1027
+2025-05-01 21:08:28,370 - mmseg - INFO - Iter [19450/20000]	lr: 1.355e-06, eta: 0:05:46, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0936, aux_identity.acc_seg: 81.9785, loss: 0.0936
+2025-05-01 21:08:57,596 - mmseg - INFO - Iter [19500/20000]	lr: 1.326e-06, eta: 0:05:14, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0936, aux_identity.acc_seg: 79.7726, loss: 0.0936
+2025-05-01 21:09:26,829 - mmseg - INFO - Iter [19550/20000]	lr: 1.297e-06, eta: 0:04:43, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0821, aux_identity.acc_seg: 81.4042, loss: 0.0821
+2025-05-01 21:09:55,993 - mmseg - INFO - Iter [19600/20000]	lr: 1.267e-06, eta: 0:04:11, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1081, aux_identity.acc_seg: 81.7987, loss: 0.1081
+2025-05-01 21:10:25,245 - mmseg - INFO - Iter [19650/20000]	lr: 1.237e-06, eta: 0:03:40, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1153, aux_identity.acc_seg: 82.5500, loss: 0.1153
+2025-05-01 21:10:54,379 - mmseg - INFO - Iter [19700/20000]	lr: 1.206e-06, eta: 0:03:08, time: 0.583, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1019, aux_identity.acc_seg: 82.7219, loss: 0.1019
+2025-05-01 21:11:23,605 - mmseg - INFO - Iter [19750/20000]	lr: 1.175e-06, eta: 0:02:37, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1004, aux_identity.acc_seg: 81.5986, loss: 0.1004
+2025-05-01 21:11:52,835 - mmseg - INFO - Iter [19800/20000]	lr: 1.143e-06, eta: 0:02:05, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1029, aux_identity.acc_seg: 82.4720, loss: 0.1029
+2025-05-01 21:12:22,031 - mmseg - INFO - Iter [19850/20000]	lr: 1.111e-06, eta: 0:01:34, time: 0.584, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.0914, aux_identity.acc_seg: 80.3824, loss: 0.0914
+2025-05-01 21:12:51,277 - mmseg - INFO - Iter [19900/20000]	lr: 1.077e-06, eta: 0:01:02, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1037, aux_identity.acc_seg: 80.3246, loss: 0.1037
+2025-05-01 21:13:20,518 - mmseg - INFO - Iter [19950/20000]	lr: 1.042e-06, eta: 0:00:31, time: 0.585, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1098, aux_identity.acc_seg: 82.9445, loss: 0.1098
+2025-05-01 21:13:49,672 - mmseg - INFO - Saving checkpoint at 20000 iterations
+2025-05-01 21:13:52,650 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 21:13:52,650 - mmseg - INFO - Iter [20000/20000]	lr: 1.001e-06, eta: 0:00:00, time: 0.643, data_time: 0.007, memory: 22331, aux_identity.loss_ce: 0.1150, aux_identity.acc_seg: 81.9934, loss: 0.1150
+2025-05-01 21:15:23,892 - mmseg - INFO - per class results:
+2025-05-01 21:15:23,894 - mmseg - INFO - 
++------------------+-------+-------+
+|      Class       |  IoU  |  Acc  |
++------------------+-------+-------+
+|  Quadruped Head  | 82.26 | 90.65 |
+|  Quadruped Body  | 70.59 | 86.38 |
+|  Quadruped Foot  |  53.3 | 68.79 |
+|  Quadruped Tail  | 49.15 | 54.14 |
+|    Biped Head    | 81.08 | 89.16 |
+|    Biped Body    |  54.6 | 68.83 |
+|    Biped Hand    | 43.22 | 59.11 |
+|    Biped Foot    | 41.96 | 59.52 |
+|    Biped Tail    | 42.27 | 49.87 |
+|    Fish Head     | 65.29 | 72.32 |
+|    Fish Body     | 64.82 | 89.32 |
+|     Fish Fin     | 39.17 | 62.53 |
+|    Fish Tail     |  1.11 |  1.12 |
+|    Bird Head     | 75.87 | 84.46 |
+|    Bird Body     | 70.34 | 86.79 |
+|    Bird Wing     | 56.61 | 69.89 |
+|    Bird Foot     | 41.21 | 52.37 |
+|    Bird Tail     | 47.55 | 57.73 |
+|    Snake Head    | 68.06 | 82.13 |
+|    Snake Body    | 83.13 | 88.96 |
+|   Reptile Head   | 73.67 | 85.98 |
+|   Reptile Body   | 73.88 |  86.7 |
+|   Reptile Foot   | 48.96 | 66.12 |
+|   Reptile Tail   | 32.04 |  36.7 |
+|     Car Body     |  91.1 | 97.46 |
+|     Car Tire     | 77.03 | 88.05 |
+| Car Side Mirror  |  0.32 |  0.32 |
+|   Bicycle Body   | 49.51 | 61.59 |
+|   Bicycle Head   | 24.47 | 35.59 |
+|   Bicycle Seat   | 18.52 | 18.62 |
+|   Bicycle Tire   | 76.36 | 89.32 |
+|    Boat Body     | 76.44 | 84.22 |
+|    Boat Sail     | 85.88 | 92.92 |
+|  Aeroplane Head  | 27.73 | 32.08 |
+|  Aeroplane Body  | 63.24 | 81.11 |
+| Aeroplane Engine | 12.39 | 13.61 |
+|  Aeroplane Wing  | 18.69 | 24.07 |
+|  Aeroplane Tail  | 24.21 | 50.44 |
+|   Bottle Mouth   | 49.51 | 76.11 |
+|   Bottle Body    | 88.48 | 93.48 |
+|    Background    | 96.54 | 98.09 |
++------------------+-------+-------+
+2025-05-01 21:15:23,894 - mmseg - INFO - Summary:
+2025-05-01 21:15:23,894 - mmseg - INFO - 
++-------+-------+-------+
+|  aAcc |  mIoU |  mAcc |
++-------+-------+-------+
+| 94.75 | 54.65 | 65.53 |
++-------+-------+-------+
+2025-05-01 21:15:23,895 - mmseg - INFO - Exp name: simpledenseclip.py
+2025-05-01 21:15:23,895 - mmseg - INFO - Iter(val) [1206]	aAcc: 0.9475, mIoU: 0.5465, mAcc: 0.6553, IoU.Quadruped Head: 0.8226, IoU.Quadruped Body: 0.7059, IoU.Quadruped Foot: 0.5330, IoU.Quadruped Tail: 0.4915, IoU.Biped Head: 0.8108, IoU.Biped Body: 0.5460, IoU.Biped Hand: 0.4322, IoU.Biped Foot: 0.4196, IoU.Biped Tail: 0.4227, IoU.Fish Head: 0.6529, IoU.Fish Body: 0.6482, IoU.Fish Fin: 0.3917, IoU.Fish Tail: 0.0111, IoU.Bird Head: 0.7587, IoU.Bird Body: 0.7034, IoU.Bird Wing: 0.5661, IoU.Bird Foot: 0.4121, IoU.Bird Tail: 0.4755, IoU.Snake Head: 0.6806, IoU.Snake Body: 0.8313, IoU.Reptile Head: 0.7367, IoU.Reptile Body: 0.7388, IoU.Reptile Foot: 0.4896, IoU.Reptile Tail: 0.3204, IoU.Car Body: 0.9110, IoU.Car Tire: 0.7703, IoU.Car Side Mirror: 0.0032, IoU.Bicycle Body: 0.4951, IoU.Bicycle Head: 0.2447, IoU.Bicycle Seat: 0.1852, IoU.Bicycle Tire: 0.7636, IoU.Boat Body: 0.7644, IoU.Boat Sail: 0.8588, IoU.Aeroplane Head: 0.2773, IoU.Aeroplane Body: 0.6324, IoU.Aeroplane Engine: 0.1239, IoU.Aeroplane Wing: 0.1869, IoU.Aeroplane Tail: 0.2421, IoU.Bottle Mouth: 0.4951, IoU.Bottle Body: 0.8848, IoU.Background: 0.9654, Acc.Quadruped Head: 0.9065, Acc.Quadruped Body: 0.8638, Acc.Quadruped Foot: 0.6879, Acc.Quadruped Tail: 0.5414, Acc.Biped Head: 0.8916, Acc.Biped Body: 0.6883, Acc.Biped Hand: 0.5911, Acc.Biped Foot: 0.5952, Acc.Biped Tail: 0.4987, Acc.Fish Head: 0.7232, Acc.Fish Body: 0.8932, Acc.Fish Fin: 0.6253, Acc.Fish Tail: 0.0112, Acc.Bird Head: 0.8446, Acc.Bird Body: 0.8679, Acc.Bird Wing: 0.6989, Acc.Bird Foot: 0.5237, Acc.Bird Tail: 0.5773, Acc.Snake Head: 0.8213, Acc.Snake Body: 0.8896, Acc.Reptile Head: 0.8598, Acc.Reptile Body: 0.8670, Acc.Reptile Foot: 0.6612, Acc.Reptile Tail: 0.3670, Acc.Car Body: 0.9746, Acc.Car Tire: 0.8805, Acc.Car Side Mirror: 0.0032, Acc.Bicycle Body: 0.6159, Acc.Bicycle Head: 0.3559, Acc.Bicycle Seat: 0.1862, Acc.Bicycle Tire: 0.8932, Acc.Boat Body: 0.8422, Acc.Boat Sail: 0.9292, Acc.Aeroplane Head: 0.3208, Acc.Aeroplane Body: 0.8111, Acc.Aeroplane Engine: 0.1361, Acc.Aeroplane Wing: 0.2407, Acc.Aeroplane Tail: 0.5044, Acc.Bottle Mouth: 0.7611, Acc.Bottle Body: 0.9348, Acc.Background: 0.9809
